@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.329
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrimsonForthCompiler", "CrimsonForthCompiler.csproj", "{E1ACEA34-7F39-4160-90A5-F8C4D549D28A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrimsonForthCompiler", "CrimsonForthCompiler.csproj", "{3E124208-0346-49AA-B001-343A7E3FC7BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E1ACEA34-7F39-4160-90A5-F8C4D549D28A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E1ACEA34-7F39-4160-90A5-F8C4D549D28A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E1ACEA34-7F39-4160-90A5-F8C4D549D28A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E1ACEA34-7F39-4160-90A5-F8C4D549D28A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E124208-0346-49AA-B001-343A7E3FC7BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E124208-0346-49AA-B001-343A7E3FC7BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E124208-0346-49AA-B001-343A7E3FC7BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E124208-0346-49AA-B001-343A7E3FC7BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {07C7EA67-C62C-444A-8A43-BAC4CF36A54A}
+		SolutionGuid = {6069144A-6A64-41C5-8AA0-A9F2699CD4FF}
 	EndGlobalSection
 EndGlobal

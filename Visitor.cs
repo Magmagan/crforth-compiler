@@ -14,7 +14,7 @@ namespace CrimsonForthCompiler {
 
         readonly CMinusParser parser;
 
-        public Visitor (CMinusParser parser) {
+        public Visitor(CMinusParser parser) {
             this.parser = parser;
         }
 
