@@ -46,8 +46,10 @@ namespace CrimsonForthCompiler {
                 throw new ExitZeroScopeException();
             }
             else {
-                while (this.symbols.Count > 0 && this.symbols.Peek().scope == this.internalScope)
+                while (this.symbols.Count > 0 && this.symbols.Peek().scope == this.internalScope) {
+                    this.symbols.Peek().ClearMembers();
                     this.symbols.Pop();
+                }
                 this.internalScope--;
             }
 
@@ -103,6 +105,10 @@ namespace CrimsonForthCompiler {
 
         public void AddMembers(Symbol symbol) {
             this.submembers.Add(symbol);
+        }
+
+        public void ClearMembers() {
+            this.submembers.Clear();
         }
 
     }

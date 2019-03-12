@@ -10,11 +10,11 @@ using CrimsonForthCompiler.Grammar;
 
 namespace CrimsonForthCompiler {
 
-    class Visitor : CMinusBaseVisitor<String> {
+    class AnalysisVisitor : CMinusBaseVisitor<String> {
 
         readonly CMinusParser parser;
 
-        public Visitor(CMinusParser parser) {
+        public AnalysisVisitor(CMinusParser parser) {
             this.parser = parser;
         }
 
