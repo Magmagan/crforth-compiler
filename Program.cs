@@ -25,7 +25,7 @@ namespace CrimsonForthCompiler {
             CMinusParser parser = new CMinusParser(tokens);
             CMinusParser.CompileUnitContext tree = parser.compileUnit();
 
-            AnalysisVisitor visitor = new AnalysisVisitor(parser);
+            AnalysisVisitor visitor = new AnalysisVisitor();
             visitor.Visit(tree);
 
             Console.Write(input);
