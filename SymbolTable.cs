@@ -14,10 +14,16 @@ namespace CrimsonForthCompiler {
             this.symbols = new Stack<Symbol>();
         }
 
-        public void AddSymbol(Symbol symbol) {
+        public bool AddSymbol(Symbol symbol) {
             if (symbol.scope != this.internalScope)
                 throw new BadSymbolScopeException(symbol);
-            this.symbols.Push(symbol);
+            if (!this.HasSymbol(symbol.id)) {
+                this.symbols.Push(symbol);
+                return true;
+            }
+            else {
+                return false;
+            }
         }
 
         public Symbol GetSymbol (string symbolId) {
@@ -69,46 +75,61 @@ namespace CrimsonForthCompiler {
 
         }
 
-    }
+        public class Symbol {
 
-    class Symbol {
+            public enum Type {
+                VOID,
+                INT,
+                ERROR,
+            }
 
-        public enum Type {
-            VOID,
-            INT,
-            ERROR,
-        }
+            public enum Construct {
+                FUNCTION,
+                STRUCT,
+                VARIABLE,
+                ARRAY,
+                ERROR,
+            }
 
-        public enum Construct {
-            FUNCTION,
-            STRUCT,
-            VARIABLE,
-            ARRAY,
-            ERROR,
-        }
+            public readonly string id;
+            public readonly Type type;
+            public readonly Construct construct;
+            public readonly List<Symbol> submembers;
+            public readonly uint scope;
+            public readonly uint size;
 
-        public readonly string id;
-        public readonly Type type;
-        public readonly Construct construct;
-        public readonly List<Symbol> submembers;
-        public readonly uint scope;
-        public readonly uint size;
+            public Symbol(string id, Type type, Construct construct, uint scope, uint size) {
+                this.id = id;
+                this.type = type;
+                this.construct = construct;
+                this.submembers = new List<Symbol>();
+                this.scope = scope;
+                this.size = size;
+            }
 
-        public Symbol(string id, Type type, Construct construct, uint scope, uint size) {
-            this.id = id;
-            this.type = type;
-            this.construct = construct;
-            this.submembers = new List<Symbol>();
-            this.scope = scope;
-            this.size = size;
-        }
+            public void AddMembers(Symbol symbol) {
+                this.submembers.Add(symbol);
+            }
 
-        public void AddMembers(Symbol symbol) {
-            this.submembers.Add(symbol);
-        }
+            public void ClearMembers() {
+                this.submembers.Clear();
+            }
 
-        public void ClearMembers() {
-            this.submembers.Clear();
+            static public Type StringToType(string type) {
+                switch (type) {
+                    case "int":
+                        return Type.INT;
+                    case "void":
+                        return Type.VOID;
+                    default:
+                        return Type.ERROR;
+                }
+            }
+
+            public override string ToString() {
+               return $"ID: {this.id}, TYPE: {this.type}, CONSTRUCT: {this.construct}";
+            }
+
         }
 
     }
