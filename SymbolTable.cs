@@ -107,7 +107,13 @@ namespace CrimsonForthCompiler {
                 this.size = size;
             }
 
-            public void AddMembers(Symbol symbol) {
+            public void AddMembers(List<Symbol> symbols) {
+                foreach (Symbol symbol in symbols) {
+                    this.AddMember(symbol);
+                }
+            }
+
+            public void AddMember(Symbol symbol) {
                 this.submembers.Add(symbol);
             }
 
