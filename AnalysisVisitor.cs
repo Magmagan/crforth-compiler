@@ -19,7 +19,6 @@ namespace CrimsonForthCompiler {
 
             SymbolTable.Symbol.Type functionType = SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText());
             string functionName = context.ID().GetText();
-            SymbolTable parameters = null; // Visit parameters
 
             SymbolTable.Symbol functionSymbol = new SymbolTable.Symbol(
                 id: functionName,
@@ -28,6 +27,9 @@ namespace CrimsonForthCompiler {
                 size: 0, // Visit parameters
                 scope: this.internalScope
             );
+
+            List<SymbolTable.Symbol> parameters = (List<SymbolTable.Symbol>) this.Visit(context.parameters()); // Visit parameters
+            functionSymbol.AddMembers(parameters);
 
             this.symbolTable.AddSymbol(functionSymbol);
 
@@ -38,6 +40,51 @@ namespace CrimsonForthCompiler {
             this.internalScope--;
 
             return null;
+        }
+
+        public override object VisitParameters_Void([NotNull] CMinusParser.Parameters_VoidContext context) {
+            Console.WriteLine("wat");
+            return new List<SymbolTable.Symbol>();
+        }
+
+        public override object VisitParameters_WithParameterList([NotNull] CMinusParser.Parameters_WithParameterListContext context) {
+            Console.WriteLine("wat???");
+            return this.Visit(context.parameterList());
+        }
+
+        public override object VisitParameterList_OneParameter([NotNull] CMinusParser.ParameterList_OneParameterContext context) {
+            List<SymbolTable.Symbol> parameters = new List<SymbolTable.Symbol> {
+                (SymbolTable.Symbol) this.Visit(context.parameter())
+            };
+            Console.WriteLine($"Here: {parameters.Count}");
+            return parameters;
+        }
+
+        public override object VisitParameterList_ManyParameters([NotNull] CMinusParser.ParameterList_ManyParametersContext context) {
+            List<SymbolTable.Symbol> parameters = (List<SymbolTable.Symbol>) this.Visit(context.parameterList());
+            SymbolTable.Symbol parameter = (SymbolTable.Symbol) this.Visit(context.parameter());
+            parameters.Add(parameter);
+            return parameters;
+        }
+
+        public override object VisitParameter_Variable([NotNull] CMinusParser.Parameter_VariableContext context) {
+            return new SymbolTable.Symbol(
+                id: context.ID().GetText(),
+                type: SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText()),
+                construct: SymbolTable.Symbol.Construct.VARIABLE,
+                scope: 1,
+                size: 1
+            );
+        }
+
+        public override object VisitParameter_Array([NotNull] CMinusParser.Parameter_ArrayContext context) {
+            return new SymbolTable.Symbol(
+                id: context.ID().GetText(),
+                type: SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText()),
+                construct: SymbolTable.Symbol.Construct.ARRAY,
+                scope: 1,
+                size: 0
+            );
         }
 
         public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {

@@ -49,18 +49,18 @@ functionDeclaration
     ;
 
 parameters
-    : parameterList
-    | 'void'
+    : parameterList #parameters_WithParameterList
+    | 'void' #parameters_Void
     ;
 
 parameterList
-    : parameter
-    | parameterList ',' parameter
+    : parameter #parameterList_OneParameter
+    | parameterList ',' parameter #parameterList_ManyParameters
     ;
 
 parameter
-    : typeSpecifier ID '[' ']'
-    | typeSpecifier ID
+    : typeSpecifier ID #parameter_Variable
+    | typeSpecifier ID '[' ']' #parameter_Array
     ;
 
 compoundStatement
