@@ -25,7 +25,8 @@ namespace CrimsonForthCompiler {
                 type: functionType,
                 construct: SymbolTable.Symbol.Construct.FUNCTION,
                 size: 0, // Visit parameters
-                scope: this.internalScope
+                scope: this.internalScope,
+                pointerCount: 0
             );
 
             List<SymbolTable.Symbol> parameters = (List<SymbolTable.Symbol>) this.Visit(context.parameters()); // Visit parameters
@@ -73,7 +74,8 @@ namespace CrimsonForthCompiler {
                 type: SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText()),
                 construct: SymbolTable.Symbol.Construct.VARIABLE,
                 scope: 1,
-                size: 1
+                size: 1,
+                pointerCount: SymbolTable.Symbol.CountStringAsterisks(context.typeSpecifier().GetText())
             );
         }
 
@@ -83,7 +85,8 @@ namespace CrimsonForthCompiler {
                 type: SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText()),
                 construct: SymbolTable.Symbol.Construct.ARRAY,
                 scope: 1,
-                size: 0
+                size: 0,
+                pointerCount: SymbolTable.Symbol.CountStringAsterisks(context.typeSpecifier().GetText())
             );
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace CrimsonForthCompiler {
 
@@ -97,14 +98,16 @@ namespace CrimsonForthCompiler {
             public readonly List<Symbol> submembers;
             public readonly uint scope;
             public readonly uint size;
+            public readonly uint pointerCount;
 
-            public Symbol(string id, Type type, Construct construct, uint scope, uint size) {
+            public Symbol(string id, Type type, Construct construct, uint scope, uint size, uint pointerCount) {
                 this.id = id;
                 this.type = type;
                 this.construct = construct;
                 this.submembers = new List<Symbol>();
                 this.scope = scope;
                 this.size = size;
+                this.pointerCount = pointerCount;
             }
 
             public void AddMembers(List<Symbol> symbols) {
@@ -122,6 +125,7 @@ namespace CrimsonForthCompiler {
             }
 
             static public Type StringToType(string type) {
+                type = type.Replace("*", "");
                 switch (type) {
                     case "int":
                         return Type.INT;
@@ -130,6 +134,10 @@ namespace CrimsonForthCompiler {
                     default:
                         return Type.ERROR;
                 }
+            }
+
+            static public uint CountStringAsterisks(string type) {
+                return (uint) type.Count(x => x == '*');
             }
 
             public override string ToString() {
