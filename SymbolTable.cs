@@ -9,15 +9,29 @@ namespace CrimsonForthCompiler {
 
         private uint internalScope;
         private readonly Stack<Symbol> symbols;
+        private readonly List<string> symbolTypes = new List<string>{
+            "int",
+            "void"
+        };
 
         public SymbolTable() {
             this.internalScope = 0;
             this.symbols = new Stack<Symbol>();
         }
 
+        public void AddSymbolType(string symbolType) {
+            this.symbolTypes.Add(symbolType);
+        }
+
         public bool AddSymbol(Symbol symbol) {
+
             if (symbol.scope != this.internalScope)
                 throw new BadSymbolScopeException(symbol);
+
+            if (!this.symbolTypes.Contains(symbol.type)) {
+                throw new BadSymbolTypeException(symbol);
+            }
+
             if (!this.HasSymbol(symbol.id)) {
                 this.symbols.Push(symbol);
                 return true;
@@ -31,6 +45,10 @@ namespace CrimsonForthCompiler {
             foreach (Symbol symbol in this.symbols) {
                 if (symbol.id == symbolId)
                     return symbol;
+                foreach (Symbol internalSymbol in symbol.submembers) {
+                    if (internalSymbol.id == symbolId)
+                        return internalSymbol;
+                }
             }
             return null;
         }
@@ -39,6 +57,10 @@ namespace CrimsonForthCompiler {
             foreach (Symbol symbol in this.symbols) {
                 if (symbol.id == symbolId)
                     return true;
+                foreach (Symbol internalSymbol in symbol.submembers) {
+                    if (internalSymbol.id == symbolId)
+                        return true;
+                }
             }
             return false;
         }
@@ -69,6 +91,13 @@ namespace CrimsonForthCompiler {
 
         }
 
+        public class BadSymbolTypeException : Exception {
+
+            public BadSymbolTypeException(Symbol symbol) :
+                base($"'{symbol.id}' symbol type not in symbol table dictionary.") { }
+
+        }
+
         public class ExitZeroScopeException : Exception {
 
             public ExitZeroScopeException() :
@@ -77,12 +106,6 @@ namespace CrimsonForthCompiler {
         }
 
         public class Symbol {
-
-            public enum Type {
-                VOID,
-                INT,
-                ERROR,
-            }
 
             public enum Construct {
                 FUNCTION,
@@ -93,14 +116,14 @@ namespace CrimsonForthCompiler {
             }
 
             public readonly string id;
-            public readonly Type type;
+            public readonly string type;
             public readonly Construct construct;
-            public readonly List<Symbol> submembers;
+            public readonly List<Symbol> submembers = new List<Symbol>();
             public readonly uint scope;
             public readonly uint size;
             public readonly uint pointerCount;
 
-            public Symbol(string id, Type type, Construct construct, uint scope, uint size, uint pointerCount) {
+            public Symbol(string id, string type, Construct construct, uint scope, uint size, uint pointerCount) {
                 this.id = id;
                 this.type = type;
                 this.construct = construct;
@@ -124,16 +147,8 @@ namespace CrimsonForthCompiler {
                 this.submembers.Clear();
             }
 
-            static public Type StringToType(string type) {
-                type = type.Replace("*", "");
-                switch (type) {
-                    case "int":
-                        return Type.INT;
-                    case "void":
-                        return Type.VOID;
-                    default:
-                        return Type.ERROR;
-                }
+            static public string RemoveExtras(string type) {
+                return type.Replace("*", "").Replace("struct", "").Replace(" ", "");
             }
 
             static public uint CountStringAsterisks(string type) {
@@ -141,7 +156,12 @@ namespace CrimsonForthCompiler {
             }
 
             public override string ToString() {
-               return $"ID: {this.id}, TYPE: {this.type}, CONSTRUCT: {this.construct}";
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine($"ID: {this.id}, TYPE: {this.type}, CONSTRUCT: {this.construct}");
+                foreach (Symbol internalSymbol in this.submembers) {
+                    stringBuilder.AppendLine($"\tID: {internalSymbol.id}, TYPE: {internalSymbol.type}, CONSTRUCT: {internalSymbol.construct}");
+                }
+                return stringBuilder.ToString();
             }
 
         }

@@ -15,21 +15,87 @@ namespace CrimsonForthCompiler {
         private uint internalScope = 0;
         private readonly SymbolTable symbolTable = new SymbolTable();
 
+        #region Structs + members
+
+        public override object VisitStructDeclaration([NotNull] CMinusParser.StructDeclarationContext context) {
+
+            string structType = context.ID().GetText();
+            this.symbolTable.AddSymbolType(structType);
+
+            List<SymbolTable.Symbol> members = (List<SymbolTable.Symbol>) this.Visit(context.structDeclarationList());
+
+            SymbolTable.Symbol structSymbol = new SymbolTable.Symbol(
+                id: structType,
+                type: structType,
+                construct: SymbolTable.Symbol.Construct.STRUCT,
+                scope: 0,
+                size: 0, // Visit members
+                pointerCount: 0
+            );
+
+            return base.VisitStructDeclaration(context);
+        }
+
+        public override object VisitStructDeclarationList_OneDeclaration([NotNull] CMinusParser.StructDeclarationList_OneDeclarationContext context) {
+            List<SymbolTable.Symbol> members = new List<SymbolTable.Symbol> {
+                (SymbolTable.Symbol) this.Visit(context.variableDeclaration())
+            };
+            return members;
+        }
+
+        public override object VisitStructDeclarationList_ManyDeclarations([NotNull] CMinusParser.StructDeclarationList_ManyDeclarationsContext context) {
+            List<SymbolTable.Symbol> members = (List<SymbolTable.Symbol>) this.Visit(context.structDeclarationList());
+            SymbolTable.Symbol member = (SymbolTable.Symbol) this.Visit(context.variableDeclaration());
+            members.Add(member);
+            return members;
+        }
+
+        #endregion
+
+        #region Variable declaration
+
+        public override object VisitVariableDeclaration_Variable([NotNull] CMinusParser.VariableDeclaration_VariableContext context) {
+            return new SymbolTable.Symbol(
+                id: context.ID().GetText(),
+                type: SymbolTable.Symbol.RemoveExtras(context.typeSpecifier().GetText()),
+                construct: SymbolTable.Symbol.Construct.VARIABLE,
+                scope: 1,
+                size: 1,
+                pointerCount: SymbolTable.Symbol.CountStringAsterisks(context.typeSpecifier().GetText())
+            );
+        }
+
+        public override object VisitVariableDeclaration_Array([NotNull] CMinusParser.VariableDeclaration_ArrayContext context) {
+            return new SymbolTable.Symbol(
+                id: context.ID().GetText(),
+                type: SymbolTable.Symbol.RemoveExtras(context.typeSpecifier().GetText()),
+                construct: SymbolTable.Symbol.Construct.VARIABLE,
+                scope: 1,
+                size: uint.Parse(context.NUM().GetText()),
+                pointerCount: SymbolTable.Symbol.CountStringAsterisks(context.typeSpecifier().GetText())
+            );
+        }
+
+        #endregion
+
+        #region Functions + parameters
+
         public override object VisitFunctionDeclaration([NotNull] CMinusParser.FunctionDeclarationContext context) {
 
-            SymbolTable.Symbol.Type functionType = SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText());
+            string functionType = SymbolTable.Symbol.RemoveExtras(context.typeSpecifier().GetText());
             string functionName = context.ID().GetText();
+
+            List<SymbolTable.Symbol> parameters = (List<SymbolTable.Symbol>) this.Visit(context.parameters()); // Visit parameters
 
             SymbolTable.Symbol functionSymbol = new SymbolTable.Symbol(
                 id: functionName,
                 type: functionType,
                 construct: SymbolTable.Symbol.Construct.FUNCTION,
-                size: 0, // Visit parameters
+                size: (uint) parameters.Count,
                 scope: this.internalScope,
                 pointerCount: 0
             );
-
-            List<SymbolTable.Symbol> parameters = (List<SymbolTable.Symbol>) this.Visit(context.parameters()); // Visit parameters
+            
             functionSymbol.AddMembers(parameters);
 
             this.symbolTable.AddSymbol(functionSymbol);
@@ -71,7 +137,7 @@ namespace CrimsonForthCompiler {
         public override object VisitParameter_Variable([NotNull] CMinusParser.Parameter_VariableContext context) {
             return new SymbolTable.Symbol(
                 id: context.ID().GetText(),
-                type: SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText()),
+                type: SymbolTable.Symbol.RemoveExtras(context.typeSpecifier().GetText()),
                 construct: SymbolTable.Symbol.Construct.VARIABLE,
                 scope: 1,
                 size: 1,
@@ -82,13 +148,15 @@ namespace CrimsonForthCompiler {
         public override object VisitParameter_Array([NotNull] CMinusParser.Parameter_ArrayContext context) {
             return new SymbolTable.Symbol(
                 id: context.ID().GetText(),
-                type: SymbolTable.Symbol.StringToType(context.typeSpecifier().GetText()),
+                type: SymbolTable.Symbol.RemoveExtras(context.typeSpecifier().GetText()),
                 construct: SymbolTable.Symbol.Construct.ARRAY,
                 scope: 1,
-                size: 0,
+                size: 1,
                 pointerCount: SymbolTable.Symbol.CountStringAsterisks(context.typeSpecifier().GetText())
             );
         }
+
+        #endregion
 
         public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {
             Console.WriteLine("Im in!");
@@ -110,7 +178,7 @@ namespace CrimsonForthCompiler {
         }
 
         public override object VisitCompileUnit([NotNull] CMinusParser.CompileUnitContext context) {
-            this.VisitChildren(context);
+            this.Visit(context.program());
             if (!(this.symbolTable.HasSymbol("main") && this.symbolTable.GetSymbol("main").construct == SymbolTable.Symbol.Construct.FUNCTION)) {
                 Console.WriteLine("BAD");
                 Console.Error.WriteLine("No main function!");

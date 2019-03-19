@@ -24,18 +24,19 @@ structDeclaration
     ;
 
 structDeclarationList
-    : variableDeclaration
-    | structDeclarationList variableDeclaration
+    : variableDeclaration #structDeclarationList_OneDeclaration
+    | structDeclarationList variableDeclaration #structDeclarationList_ManyDeclarations
     ;
 
 variableDeclaration
-    : typeSpecifier ID ';'
-    | typeSpecifier ID '[' NUM ']' ';'
+    : typeSpecifier ID ';' #variableDeclaration_Variable
+    | typeSpecifier ID '[' NUM ']' ';' #variableDeclaration_Array
     ;
 
 typeSpecifier
     : 'int'
     | 'void'
+    | 'struct' ID
     | typeSpecifier pointer
     ;
 
