@@ -23,7 +23,22 @@ namespace CrimsonForthCompiler {
             CMinusLexer lexer = new CMinusLexer(inputStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             CMinusParser parser = new CMinusParser(tokens);
+
+            SyntaxErrorListener syntaxErrorListener = new SyntaxErrorListener();
+            parser.AddErrorListener(syntaxErrorListener);
+
             CMinusParser.CompileUnitContext tree = parser.compileUnit();
+
+            if (lexer.errors > 0) 
+                Console.WriteLine("Lexical analysis failure.");
+
+            if (syntaxErrorListener.errors > 0)
+                Console.WriteLine("Syntax analysis failure.");
+
+            if (lexer.errors > 0 || syntaxErrorListener.errors > 0) {
+                Console.ReadKey();
+                return;
+            }
 
             AnalysisVisitor visitor = new AnalysisVisitor();
             visitor.Visit(tree);
@@ -33,4 +48,5 @@ namespace CrimsonForthCompiler {
 
         }
     }
+
 }
