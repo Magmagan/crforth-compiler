@@ -42,7 +42,7 @@ typeSpecifier
 
 pointer
     : '*'
-    | '*' pointer
+    | pointer '*'
     ;
 
 functionDeclaration
@@ -217,4 +217,8 @@ LINECOMMENT
 
 WS
     : ' ' -> channel(HIDDEN)
+    ;
+
+ErrorChar
+    : .
     ;
