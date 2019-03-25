@@ -43,11 +43,14 @@ namespace CrimsonForthCompiler {
             GlobalAnalysisVisitor globalVisitor = new GlobalAnalysisVisitor();
             globalVisitor.Visit(tree);
 
-            if (globalVisitor.errors > 0) {
+            /*if (globalVisitor.errors > 0) {
                 Console.Error.WriteLine("Semantic analysis failure.");
                 Console.ReadKey();
                 return -1;
-            }
+            }*/
+
+            InternalAnalysisVisitor internalVisitor = new InternalAnalysisVisitor(globalVisitor.symbolTable);
+            internalVisitor.Visit(tree);
 
             Console.Write(input);
             Console.ReadKey();
