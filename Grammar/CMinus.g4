@@ -70,12 +70,7 @@ parameter
     ;
 
 compoundStatement
-    : '{' internalDeclarations? statementList? '}'
-    ;
-
-internalDeclarations
-    : variableDeclaration
-    | internalDeclarations variableDeclaration
+    : '{' statementList? '}'
     ;
 
 statementList
