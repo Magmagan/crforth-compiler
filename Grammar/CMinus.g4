@@ -4,36 +4,36 @@ grammar CMinus;
  * Parser Rules
  */
 
-program
+program //OK
     : declarationList
     ;
 
-declarationList
+declarationList //OK
     : declaration
     | declarationList declaration
     ;
 
-declaration
+declaration //OK
     : variableDeclaration
     | functionDeclaration
     | structDeclaration
     ;
 
-structDeclaration
+structDeclaration //OK
     : 'struct' ID '{' structDeclarationList '}'
     ;
 
-structDeclarationList
+structDeclarationList //OK
     : structVariableDeclaration #structDeclarationList_OneDeclaration
     | structDeclarationList structVariableDeclaration #structDeclarationList_ManyDeclarations
     ;
 
-structVariableDeclaration
+structVariableDeclaration //OK
     : typeSpecifier ID ';' #structVariableDeclaration_Variable
     | typeSpecifier ID '[' NUM ']' ';' #structVariableDeclaration_Array
     ;
 
-variableDeclaration
+variableDeclaration //OK
     : typeSpecifier ID ';' #variableDeclaration_Variable
     | typeSpecifier ID '[' NUM ']' ';' #variableDeclaration_Array
     ;
@@ -50,30 +50,30 @@ pointer
     | pointer '*'
     ;
 
-functionDeclaration
+functionDeclaration //OK
     : typeSpecifier ID '(' parameters ')' compoundStatement
     ;
 
-parameters
+parameters //OK
     : parameterList #parameters_WithParameterList
     | 'void' #parameters_Void
     ;
 
-parameterList
+parameterList //OK
     : parameter #parameterList_OneParameter
     | parameterList ',' parameter #parameterList_ManyParameters
     ;
 
-parameter
+parameter //OK
     : typeSpecifier ID #parameter_Variable
     | typeSpecifier ID '[' ']' #parameter_Array
     ;
 
-compoundStatement
+compoundStatement //OK
     : '{' statementList? '}'
     ;
 
-statementList
+statementList //OK
     : statement
     | statementList statement
     ;
@@ -87,31 +87,26 @@ statement
     | variableDeclaration
     ;
 
-expressionStatement
-    : expression? ';'
+expressionStatement //OK
+    : (variable '=' logicalOrExpression)? ';'
     ;
 
-selectionStatement
+selectionStatement //OK
     : 'if' '(' logicalOrExpression ')' ifStatement=statement
     | 'if' '(' logicalOrExpression ')' ifStatement=statement ('else' elseStatement=statement)
     ;
 
-iterationStatement
+iterationStatement //OK
     : 'while' '(' logicalOrExpression ')' statement
     ;
 
-returnStatement
-    : 'return' expressionStatement
-    ;
-
-expression
-    : variable '=' expression   #expressaoatribuicao
-    | logicalOrExpression       #expressaosimples
+returnStatement //OK
+    : 'return' logicalOrExpression? ';'
     ;
 
 variable
     : '*' variable
-    | ID '[' expression ']'
+    | ID '[' logicalOrExpression ']'
     | ID
     ;
 
@@ -124,7 +119,7 @@ unaryExpression
     ;
 
 factor
-    : '(' expression ')'
+    : '(' logicalOrExpression ')'
     | unaryExpression
     | variable
     | functionCall
@@ -183,8 +178,8 @@ functionCall
     ;
 
 argumentList
-    : expression
-    | argumentList ',' expression
+    : logicalOrExpression
+    | argumentList ',' logicalOrExpression
     ;
 
 compileUnit
