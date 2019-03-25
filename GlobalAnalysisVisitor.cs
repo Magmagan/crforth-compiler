@@ -22,9 +22,9 @@ namespace CrimsonForthCompiler {
 
             string structType = context.ID().GetText();
 
-            bool success = this.symbolTable.AddSymbolType(structType);
+            bool typeSuccess = this.symbolTable.AddSymbolType(structType);
 
-            if (!success) {
+            if (!typeSuccess) {
                 this.EmitSemanticErrorMessage($"Struct type {structType} already declared", context);
             }
 
@@ -40,6 +40,12 @@ namespace CrimsonForthCompiler {
                 size: membersSize,
                 pointerCount: 0
             );
+
+            bool symbolSuccess = this.symbolTable.AddSymbol(structSymbol);
+
+            if (!symbolSuccess) {
+                this.EmitSemanticErrorMessage($"Symbol {structType} already in symbol table as a {this.symbolTable.GetSymbol(structType).construct}", context);
+            }
 
             return null;
         }
