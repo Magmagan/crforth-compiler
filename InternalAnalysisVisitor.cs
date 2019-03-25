@@ -51,6 +51,70 @@ namespace CrimsonForthCompiler {
 
         #endregion
 
+        #region Variable Declaration
+
+        public override object VisitVariableDeclaration_Variable([NotNull] CMinusParser.VariableDeclaration_VariableContext context) {
+
+            if (this.internalScope == 0)
+                return null;
+
+            string variableName = context.ID().GetText();
+            string variableType = SymbolTable.Symbol.RemoveExtras(context.typeSpecifier().GetText());
+
+            if (variableType == "void") {
+                this.EmitSemanticErrorMessage("Variable declared as void type", context);
+            }
+
+            SymbolTable.Symbol symbol = new SymbolTable.Symbol(
+                id: variableName,
+                type: variableType,
+                construct: SymbolTable.Symbol.Construct.VARIABLE,
+                scope: this.internalScope,
+                size: 1,
+                pointerCount: SymbolTable.Symbol.CountStringAsterisks(context.typeSpecifier().GetText())
+            );
+
+            bool success = this.symbolTable.AddSymbol(symbol);
+
+            if (!success) {
+                this.EmitSemanticErrorMessage($"Symbol {variableName} already in symbol table as a {this.symbolTable.GetSymbol(variableName).construct}", context);
+            }
+
+            return null;
+        }
+
+        public override object VisitVariableDeclaration_Array([NotNull] CMinusParser.VariableDeclaration_ArrayContext context) {
+
+            if (this.internalScope == 0)
+                return null;
+
+            string variableName = context.ID().GetText();
+            string variableType = SymbolTable.Symbol.RemoveExtras(context.typeSpecifier().GetText());
+
+            if (variableType == "void") {
+                this.EmitSemanticErrorMessage("Variable declared as void type", context);
+            }
+
+            SymbolTable.Symbol symbol = new SymbolTable.Symbol(
+                id: variableName,
+                type: variableType,
+                construct: SymbolTable.Symbol.Construct.ARRAY,
+                scope: this.internalScope,
+                size: uint.Parse(context.NUM().GetText()),
+                pointerCount: SymbolTable.Symbol.CountStringAsterisks(context.typeSpecifier().GetText())
+            );
+
+            bool success = this.symbolTable.AddSymbol(symbol);
+
+            if (!success) {
+                this.EmitSemanticErrorMessage($"Symbol {variableName} already in symbol table as a {this.symbolTable.GetSymbol(variableName).construct}", context);
+            }
+
+            return null;
+        }
+
+        #endregion
+
         private void EmitSemanticErrorMessage(string message, ParserRuleContext context) {
             Console.Error.WriteLine($"Sem | Line {context.Start.Line}:{context.Start.Column} - {message}");
             this.errors++;
