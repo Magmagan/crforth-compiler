@@ -30,12 +30,14 @@ namespace CrimsonForthCompiler {
 
             List<SymbolTable.Symbol> members = (List<SymbolTable.Symbol>) this.Visit(context.structDeclarationList());
 
+            uint membersSize = (uint) members.Sum(member => member.size);
+
             SymbolTable.Symbol structSymbol = new SymbolTable.Symbol(
                 id: structType,
                 type: structType,
                 construct: SymbolTable.Symbol.Construct.STRUCT,
                 scope: 0,
-                size: (uint) members.Count,
+                size: membersSize,
                 pointerCount: 0
             );
 
