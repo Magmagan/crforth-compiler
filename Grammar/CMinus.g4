@@ -24,8 +24,13 @@ structDeclaration
     ;
 
 structDeclarationList
-    : variableDeclaration #structDeclarationList_OneDeclaration
-    | structDeclarationList variableDeclaration #structDeclarationList_ManyDeclarations
+    : structVariableDeclaration #structDeclarationList_OneDeclaration
+    | structDeclarationList structVariableDeclaration #structDeclarationList_ManyDeclarations
+    ;
+
+structVariableDeclaration
+    : typeSpecifier ID ';' #structVariableDeclaration_Variable
+    | typeSpecifier ID '[' NUM ']' ';' #structVariableDeclaration_Array
     ;
 
 variableDeclaration

@@ -5,6 +5,7 @@ using Antlr4.Runtime.Misc;
 namespace CrimsonForthCompiler.Grammar {
 
     partial class CMinusParser {
+
     }
 
     public class SyntaxErrorListener : BaseErrorListener {
@@ -14,8 +15,8 @@ namespace CrimsonForthCompiler.Grammar {
         public int errors = 0;
         
         public override void SyntaxError([NotNull] IRecognizer recognizer, [Nullable] IToken offendingSymbol, int line, int charPositionInLine, [NotNull] string msg, [Nullable] RecognitionException e) {
-            Console.WriteLine($"S | Line {line}:{charPositionInLine} - Unexpected token {offendingSymbol}");
-            errors++;
+            Console.WriteLine($"Syn | Line {line}:{charPositionInLine} - Unexpected token {offendingSymbol}");
+            this.errors++;
             base.SyntaxError(recognizer, offendingSymbol, line, charPositionInLine, msg, e);
         }
 

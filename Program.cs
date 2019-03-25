@@ -13,7 +13,7 @@ namespace CrimsonForthCompiler {
 
     class Program {
 
-        static void Main(string[] args) {
+        static int Main(string[] args) {
 
             Console.Write("File path: ");
             string path = Console.ReadLine().Trim('\"');
@@ -37,15 +37,22 @@ namespace CrimsonForthCompiler {
 
             if (lexer.errors > 0 || syntaxErrorListener.errors > 0) {
                 Console.ReadKey();
-                return;
+                return -1;
             }
 
-            AnalysisVisitor visitor = new AnalysisVisitor();
-            visitor.Visit(tree);
+            GlobalAnalysisVisitor globalVisitor = new GlobalAnalysisVisitor();
+            globalVisitor.Visit(tree);
+
+            if (globalVisitor.errors > 0) {
+                Console.Error.WriteLine("Semantic analysis failure.");
+                Console.ReadKey();
+                return -1;
+            }
 
             Console.Write(input);
             Console.ReadKey();
 
+            return 0;
         }
     }
 

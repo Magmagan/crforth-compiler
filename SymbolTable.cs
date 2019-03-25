@@ -45,10 +45,6 @@ namespace CrimsonForthCompiler {
             foreach (Symbol symbol in this.symbols) {
                 if (symbol.id == symbolId)
                     return symbol;
-                foreach (Symbol internalSymbol in symbol.submembers) {
-                    if (internalSymbol.id == symbolId)
-                        return internalSymbol;
-                }
             }
             return null;
         }
@@ -57,10 +53,6 @@ namespace CrimsonForthCompiler {
             foreach (Symbol symbol in this.symbols) {
                 if (symbol.id == symbolId)
                     return true;
-                foreach (Symbol internalSymbol in symbol.submembers) {
-                    if (internalSymbol.id == symbolId)
-                        return true;
-                }
             }
             return false;
         }

@@ -10,7 +10,7 @@ namespace CrimsonForthCompiler.Grammar {
         public override void Emit(IToken token) {
             if (token.Type == ErrorChar) {
                 this.errors++;
-                Console.WriteLine($"L | Line {token.Line}:{token.StartIndex} - Unrecognized token {token.ToString()}");
+                Console.WriteLine($"Lex | Line {token.Line}:{token.StartIndex} - Unrecognized token {token.ToString()}");
             }
             base.Emit(token);
         }
