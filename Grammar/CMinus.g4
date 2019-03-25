@@ -97,11 +97,12 @@ expressionStatement
     ;
 
 selectionStatement
-    : 'if' '(' expression ')' statement ('else' statement)?
+    : 'if' '(' logicalOrExpression ')' ifStatement=statement
+    | 'if' '(' logicalOrExpression ')' ifStatement=statement ('else' elseStatement=statement)
     ;
 
 iterationStatement
-    : 'while' '(' expression ')' statement
+    : 'while' '(' logicalOrExpression ')' statement
     ;
 
 returnStatement

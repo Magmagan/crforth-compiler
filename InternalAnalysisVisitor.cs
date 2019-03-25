@@ -43,6 +43,8 @@ namespace CrimsonForthCompiler {
                 }
             }
 
+            this.Visit(context.compoundStatement());
+
             this.symbolTable.ExitScope();
             this.internalScope--;
 
@@ -109,6 +111,50 @@ namespace CrimsonForthCompiler {
             if (!success) {
                 this.EmitSemanticErrorMessage($"Symbol {variableName} already in symbol table as a {this.symbolTable.GetSymbol(variableName).construct}", context);
             }
+
+            return null;
+        }
+
+        #endregion
+
+        #region Control blocks
+
+        public override object VisitSelectionStatement([NotNull] CMinusParser.SelectionStatementContext context) {
+
+            this.Visit(context.logicalOrExpression());
+
+            this.internalScope++;
+            this.symbolTable.EnterScope();
+
+            this.Visit(context.ifStatement);
+
+            this.symbolTable.ExitScope();
+            this.internalScope--;
+
+            if (context.elseStatement != null) {
+                this.internalScope++;
+                this.symbolTable.EnterScope();
+
+                this.Visit(context.elseStatement);
+
+                this.symbolTable.ExitScope();
+                this.internalScope--;
+            }
+
+            return null;
+        }
+
+        public override object VisitIterationStatement([NotNull] CMinusParser.IterationStatementContext context) {
+
+            this.Visit(context.logicalOrExpression());
+
+            this.internalScope++;
+            this.symbolTable.EnterScope();
+
+            this.Visit(context.statement());
+
+            this.symbolTable.ExitScope();
+            this.internalScope--;
 
             return null;
         }

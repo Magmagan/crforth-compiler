@@ -186,10 +186,6 @@ namespace CrimsonForthCompiler {
                 this.EmitSemanticErrorMessage($"Symbol {functionName} already in symbol table as a {this.symbolTable.GetSymbol(functionName).construct}", context);
             }
 
-            this.internalScope++;
-            this.VisitCompoundStatement(context.compoundStatement());
-            this.internalScope--;
-
             return null;
         }
 
