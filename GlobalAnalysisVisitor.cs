@@ -14,14 +14,19 @@ namespace CrimsonForthCompiler {
 
         private uint internalScope = 0;
         public uint errors = 0;
-        private readonly SymbolTable symbolTable = new SymbolTable();
+        public readonly SymbolTable symbolTable = new SymbolTable();
 
         #region Structs + members
 
         public override object VisitStructDeclaration([NotNull] CMinusParser.StructDeclarationContext context) {
 
             string structType = context.ID().GetText();
-            this.symbolTable.AddSymbolType(structType);
+
+            bool success = this.symbolTable.AddSymbolType(structType);
+
+            if (!success) {
+                this.EmitSemanticErrorMessage($"Struct type {structType} already declared", context);
+            }
 
             List<SymbolTable.Symbol> members = (List<SymbolTable.Symbol>) this.Visit(context.structDeclarationList());
 
@@ -30,11 +35,11 @@ namespace CrimsonForthCompiler {
                 type: structType,
                 construct: SymbolTable.Symbol.Construct.STRUCT,
                 scope: 0,
-                size: 0, // Visit members
+                size: (uint) members.Count,
                 pointerCount: 0
             );
 
-            return base.VisitStructDeclaration(context);
+            return null;
         }
 
         public override object VisitStructDeclarationList_OneDeclaration([NotNull] CMinusParser.StructDeclarationList_OneDeclarationContext context) {

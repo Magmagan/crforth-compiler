@@ -19,9 +19,22 @@ namespace CrimsonForthCompiler {
             this.symbols = new Stack<Symbol>();
         }
 
-        public void AddSymbolType(string symbolType) {
+        #region Symbol types
+
+        public bool AddSymbolType(string symbolType) {
+            if (this.HasSymbolType(symbolType))
+                return false;
             this.symbolTypes.Add(symbolType);
+            return true;
         }
+
+        public bool HasSymbolType(string symbolType) {
+            return this.symbolTypes.Contains(symbolType);
+        }
+
+        #endregion
+
+        #region Symbols
 
         public bool AddSymbol(Symbol symbol) {
 
@@ -56,6 +69,8 @@ namespace CrimsonForthCompiler {
             }
             return false;
         }
+
+        #endregion
 
         public void EnterScope() {
             this.internalScope++;
