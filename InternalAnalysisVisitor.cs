@@ -161,6 +161,20 @@ namespace CrimsonForthCompiler {
 
         #endregion
 
+        public override object VisitFunctionCall([NotNull] CMinusParser.FunctionCallContext context) {
+
+            string functionName = context.ID().GetText();
+
+            if (!this.symbolTable.HasSymbol(functionName)) {
+                this.EmitSemanticErrorMessage($"Function {functionName} called but not declared", context);
+            }
+            else if (this.symbolTable.GetSymbol(functionName).construct != SymbolTable.Symbol.Construct.FUNCTION) {
+                this.EmitSemanticErrorMessage($"{functionName} called as function but declared as a {this.symbolTable.GetSymbol(functionName).construct}", context);
+            }
+
+            return null;
+        }
+
         private void EmitSemanticErrorMessage(string message, ParserRuleContext context) {
             Console.Error.WriteLine($"Sem | Line {context.Start.Line}:{context.Start.Column} - {message}");
             this.errors++;
