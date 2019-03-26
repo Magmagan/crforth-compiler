@@ -105,14 +105,14 @@ returnStatement //OK
     ;
 
 variable
-    : '*' variable
-    | ID '[' logicalOrExpression ']'
-    | ID
+    : '*' variable #variable_Pointer
+    | variable '.' variable #variable_StructAccess
+    | variable '[' logicalOrExpression ']' #variable_ArrayAccess
+    | ID #variable_ID //OK
     ;
 
 unaryExpression
     : '&' factor
-    | '*' factor
     | '-' factor
     | '~' factor
     | '!' factor
@@ -172,7 +172,7 @@ multiplyExpression
     | factor
     ;
 
-functionCall
+functionCall //OK
     : ID '(' argumentList ')'
     | ID '(' ')'
     ;

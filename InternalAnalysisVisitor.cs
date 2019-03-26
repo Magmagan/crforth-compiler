@@ -15,6 +15,8 @@ namespace CrimsonForthCompiler {
 
         public uint errors;
         public uint internalScope = 0;
+        private bool inAssignment = false;
+        private string assignmentType = "";
         private readonly SymbolTable symbolTable;
 
         public InternalAnalysisVisitor (SymbolTable symbolTable) {
@@ -51,9 +53,23 @@ namespace CrimsonForthCompiler {
             return true;
         }
 
+        public override object VisitFunctionCall([NotNull] CMinusParser.FunctionCallContext context) {
+
+            string functionName = context.ID().GetText();
+
+            if (!this.symbolTable.HasSymbol(functionName)) {
+                this.EmitSemanticErrorMessage($"Function {functionName} called but not declared", context);
+            }
+            else if (this.symbolTable.GetSymbol(functionName).construct != SymbolTable.Symbol.Construct.FUNCTION) {
+                this.EmitSemanticErrorMessage($"{functionName} called as function but declared as a {this.symbolTable.GetSymbol(functionName).construct}", context);
+            }
+
+            return null;
+        }
+
         #endregion
 
-        #region Variable Declaration
+        #region Variable Declaration & Use
 
         public override object VisitVariableDeclaration_Variable([NotNull] CMinusParser.VariableDeclaration_VariableContext context) {
 
@@ -115,6 +131,54 @@ namespace CrimsonForthCompiler {
             return null;
         }
 
+        public override object VisitVariable_Pointer([NotNull] CMinusParser.Variable_PointerContext context) {
+            return base.VisitVariable_Pointer(context);
+        }
+
+        public override object VisitVariable_StructAccess([NotNull] CMinusParser.Variable_StructAccessContext context) {
+            return base.VisitVariable_StructAccess(context);
+        }
+
+        public override object VisitVariable_ArrayAccess([NotNull] CMinusParser.Variable_ArrayAccessContext context) {
+
+            string arrayType = (string) this.Visit(context.variable());
+
+            string arrayName = SymbolTable.Symbol.RemoveExtras(context.variable().GetText());
+
+            if (!this.symbolTable.HasSymbol(arrayName)) {
+                this.EmitSemanticErrorMessage($"Variable {arrayName} called but not declared", context);
+                return SymbolTable.Symbol.Construct.ERROR;
+            }
+
+            SymbolTable.Symbol foundSymbol = this.symbolTable.GetSymbol(arrayName);
+
+            if (foundSymbol.construct != SymbolTable.Symbol.Construct.ARRAY) {
+                this.EmitSemanticErrorMessage($"{arrayName} used as an array but declared as a {foundSymbol.construct}", context);
+                return SymbolTable.Symbol.Construct.ERROR;
+            }
+
+            return foundSymbol.type;
+        }
+
+        public override object VisitVariable_ID([NotNull] CMinusParser.Variable_IDContext context) {
+
+            string variableName = context.ID().GetText();
+
+            if (!this.symbolTable.HasSymbol(variableName)) {
+                this.EmitSemanticErrorMessage($"Variable {variableName} called but not declared", context);
+                return "error";
+            }
+
+            SymbolTable.Symbol foundSymbol = this.symbolTable.GetSymbol(variableName);
+
+            if (foundSymbol.construct == SymbolTable.Symbol.Construct.FUNCTION || foundSymbol.construct == SymbolTable.Symbol.Construct.ERROR) {
+                this.EmitSemanticErrorMessage($"{variableName} used as a variable but declared as a {foundSymbol.construct}", context);
+                return "error";
+            }
+
+            return foundSymbol.type;
+        }
+
         #endregion
 
         #region Control blocks
@@ -161,19 +225,30 @@ namespace CrimsonForthCompiler {
 
         #endregion
 
-        public override object VisitFunctionCall([NotNull] CMinusParser.FunctionCallContext context) {
+        #region Expressions
 
-            string functionName = context.ID().GetText();
+        public override object VisitExpressionStatement([NotNull] CMinusParser.ExpressionStatementContext context) {
+            /*
+            string leftHandType = (string) this.Visit(context.variable());
 
-            if (!this.symbolTable.HasSymbol(functionName)) {
-                this.EmitSemanticErrorMessage($"Function {functionName} called but not declared", context);
+            this.inAssignment = true;
+            this.assignmentType = leftHandType;
+
+            string rightHandType = (string) this.Visit(context.logicalOrExpression());
+
+            this.inAssignment = false;
+            this.assignmentType = "";
+
+            if (leftHandType != rightHandType) {
+                this.EmitSemanticErrorMessage($"Assignment of {leftHandType} expected, but found {rightHandType}", context);
             }
-            else if (this.symbolTable.GetSymbol(functionName).construct != SymbolTable.Symbol.Construct.FUNCTION) {
-                this.EmitSemanticErrorMessage($"{functionName} called as function but declared as a {this.symbolTable.GetSymbol(functionName).construct}", context);
-            }
 
+            */
             return null;
+            
         }
+
+        #endregion
 
         private void EmitSemanticErrorMessage(string message, ParserRuleContext context) {
             Console.Error.WriteLine($"Sem | Line {context.Start.Line}:{context.Start.Column} - {message}");
