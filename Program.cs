@@ -8,12 +8,19 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
+using CrimsonForthCompiler.Visitors;
 
 namespace CrimsonForthCompiler {
 
     class Program {
 
         static int Main(string[] args) {
+
+            ILWriter writer = new ILWriter();
+            writer.Test();
+
+            Console.ReadKey();
+            return 0;
 
             Console.Write("File path: ");
             string path = Console.ReadLine().Trim('\"');
@@ -43,16 +50,28 @@ namespace CrimsonForthCompiler {
             GlobalAnalysisVisitor globalVisitor = new GlobalAnalysisVisitor();
             globalVisitor.Visit(tree);
 
-            /*if (globalVisitor.errors > 0) {
-                Console.Error.WriteLine("Semantic analysis failure.");
+            if (globalVisitor.errors > 0) {
+                Console.Error.WriteLine("Global semantic analysis failure.");
                 Console.ReadKey();
                 return -1;
-            }*/
+            }
 
             InternalAnalysisVisitor internalVisitor = new InternalAnalysisVisitor(globalVisitor.symbolTable);
             internalVisitor.Visit(tree);
 
-            Console.Write(input);
+            if (internalVisitor.errors> 0) {
+                Console.Error.WriteLine("Internal semantic analysis failure.");
+                Console.ReadKey();
+                return -1;
+            }
+
+            Console.WriteLine("\n----------\n");
+
+            ILVisitor ilVisitor = new ILVisitor(globalVisitor.symbolTable);
+            ilVisitor.Visit(tree);
+
+            Console.WriteLine("\n----------\n");
+
             Console.ReadKey();
 
             return 0;
