@@ -85,10 +85,12 @@ statement
     | iterationStatement
     | returnStatement
     | variableDeclaration
+    | functionCall
     ;
 
 expressionStatement //OK
-    : (variable '=' logicalOrExpression)? ';'
+    : variable '=' logicalOrExpression ';'
+    | ';'
     ;
 
 selectionStatement //OK
