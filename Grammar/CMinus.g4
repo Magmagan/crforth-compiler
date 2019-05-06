@@ -129,49 +129,43 @@ factor
     ;
 
 logicalOrExpression
-    : logicalOrExpression '||' logicalAndExpression
-    | logicalAndExpression
+    : logicalOrExpression '||' logicalAndExpression #logicalOrExpression_Or
+    | logicalAndExpression #logicalOrExpression_NoOr
     ;
 
 logicalAndExpression
-    : logicalAndExpression '&&' bitwiseExpression
-    | bitwiseExpression
+    : logicalAndExpression '&&' bitwiseExpression #logicalAndExpression_And
+    | bitwiseExpression #logicalAndExpression_NoAnd
     ;
 
 bitwiseExpression
-    : bitwiseExpression '&' comparisonExpression
-    | bitwiseExpression '^' comparisonExpression
-    | bitwiseExpression '|' comparisonExpression
-    | comparisonExpression
+    : bitwiseExpression ('&'|'^'|'|') comparisonExpressionEquals #bitwiseExpression_Bitwise
+    | comparisonExpressionEquals #bitwiseExpression_NoBitwise
+    ;
+
+comparisonExpressionEquals
+    : comparisonExpressionEquals ('=='|'!=') comparisonExpression #comparisonExpressionEquals_Equals
+    | comparisonExpression #comparisonExpressionEquals_NoEquals
     ;
 
 comparisonExpression
-    : comparisonExpression '<=' shiftExpression
-    | comparisonExpression '<' shiftExpression
-    | comparisonExpression '>' shiftExpression
-    | comparisonExpression '>=' shiftExpression
-    | comparisonExpression '==' shiftExpression
-    | comparisonExpression '!=' shiftExpression
-    | shiftExpression
+    : comparisonExpression ('<='|'<'|'>'|'>=') shiftExpression #comparisonExpression_Comparison
+    | shiftExpression #comparisonExpression_NoComparison
     ;
 
 shiftExpression
-    : shiftExpression '>>' sumExpression
-    | shiftExpression '<<' sumExpression
-    | sumExpression
+    : shiftExpression ('>>'|'<<') sumExpression #shiftExpression_Shift
+    | sumExpression #shiftExpression_NoShift
     ;
 
 sumExpression
-    : sumExpression '+' multiplyExpression
-    | sumExpression '-' multiplyExpression
-    | multiplyExpression
+    : sumExpression ('+'|'-') multiplyExpression #sumExpression_Sum
+    | multiplyExpression #sumExpression_NoSum
     ;
 
 multiplyExpression
-    : multiplyExpression '*' factor
-    | multiplyExpression '/' factor
-    | multiplyExpression '%' factor
-    | factor
+    : multiplyExpression ('*'|'/'|'%') factor #multiplyExpression_Multiplication
+    | factor #multiplyExpression_NoMultiplication
     ;
 
 functionCall //OK
