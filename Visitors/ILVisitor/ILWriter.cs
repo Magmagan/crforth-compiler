@@ -136,7 +136,12 @@ namespace CrimsonForthCompiler {
         }
 
         public void WriteJumpIfTrue(int labelNumber) {
-            this.WriteBranchTrue(labelNumber);
+            this.WriteUnaryBitwiseNot();
+            this.WriteBranchFalse(labelNumber);
+        }
+
+        public void WriteJumpIfFalse(int labelNumber) {
+            this.WriteBranchFalse(labelNumber);
         }
 
         void WriteBitwiseAnd() { // & and s1
@@ -211,8 +216,8 @@ namespace CrimsonForthCompiler {
             this.WriteInstructionToStackedScope($"br.s LBL_{labelNumber}", 2);
         }
 
-        void WriteBranchTrue(int labelNumber) {
-            this.WriteInstructionToStackedScope($"brtrue.s LBL_{labelNumber}", 2);
+        void WriteBranchFalse(int labelNumber) {
+            this.WriteInstructionToStackedScope($"brfalse.s LBL_{labelNumber}", 2);
         }
 
         //////////

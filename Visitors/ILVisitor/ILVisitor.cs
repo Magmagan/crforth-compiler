@@ -34,11 +34,35 @@ namespace CrimsonForthCompiler.Visitors.ILVisitor {
             return base.VisitArgumentList(context);
         }
 
+        public override object VisitSelectionStatement([NotNull] CMinusParser.SelectionStatementContext context) {
+
+            int selectionEndLabel = this.labelGenerator.GenerateLabel();
+            int elseBodyLabel = this.labelGenerator.GenerateLabel();
+
+            this.Visit(context.logicalOrExpression());
+
+            if (context.elseStatement != null) {
+                this.writer.WriteJumpIfFalse(elseBodyLabel);
+                this.Visit(context.ifStatement);
+                this.writer.WriteUnconditionalJump(selectionEndLabel);
+
+                this.writer.WriteLabel(elseBodyLabel);
+                this.Visit(context.elseStatement);
+            }
+            else {
+                this.writer.WriteJumpIfFalse(selectionEndLabel);
+                this.Visit(context.ifStatement);
+            }
+
+            this.writer.WriteLabel(selectionEndLabel);
+
+            return null;
+        }
+
         public override object VisitIterationStatement([NotNull] CMinusParser.IterationStatementContext context) {
 
             int logicalExpressionLabel = this.labelGenerator.GenerateLabel();
             int statementBodyLabel = this.labelGenerator.GenerateLabel();
-
             
             this.writer.WriteUnconditionalJump(logicalExpressionLabel);
             
@@ -52,6 +76,8 @@ namespace CrimsonForthCompiler.Visitors.ILVisitor {
 
             return null;
         }
+
+
 
         public override object VisitFactor([NotNull] CMinusParser.FactorContext context) {
             if (this.visitCount > 0)
