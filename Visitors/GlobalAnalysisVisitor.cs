@@ -8,7 +8,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
 
-namespace CrimsonForthCompiler {
+namespace CrimsonForthCompiler.Visitors {
 
     class GlobalAnalysisVisitor : CMinusBaseVisitor<object> {
 

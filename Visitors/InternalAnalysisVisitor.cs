@@ -9,7 +9,7 @@ using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
 
 
-namespace CrimsonForthCompiler {
+namespace CrimsonForthCompiler.Visitors {
 
     class InternalAnalysisVisitor : CMinusBaseVisitor<object> {
 
@@ -59,9 +59,18 @@ namespace CrimsonForthCompiler {
 
             if (!this.symbolTable.HasSymbol(functionName)) {
                 this.EmitSemanticErrorMessage($"Function {functionName} called but not declared", context);
+                return null;
             }
-            else if (this.symbolTable.GetSymbol(functionName).construct != SymbolTable.Symbol.Construct.FUNCTION) {
-                this.EmitSemanticErrorMessage($"{functionName} called as function but declared as a {this.symbolTable.GetSymbol(functionName).construct}", context);
+
+            SymbolTable.Symbol foundSymbol = this.symbolTable.GetSymbol(functionName);
+
+            if (foundSymbol.construct != SymbolTable.Symbol.Construct.FUNCTION) {
+                this.EmitSemanticErrorMessage($"{functionName} called as function but declared as a {foundSymbol.construct}", context);
+                return null;
+            }
+
+            if (this.inAssignment && foundSymbol.type == "void") {
+                this.EmitSemanticErrorMessage($"Void returning function in assignment", context);
             }
 
             return null;
@@ -227,26 +236,26 @@ namespace CrimsonForthCompiler {
 
         #region Expressions
 
+        
         public override object VisitExpressionStatement([NotNull] CMinusParser.ExpressionStatementContext context) {
-            /*
-            string leftHandType = (string) this.Visit(context.variable());
+            
+            if (context.variable() != null) {
 
-            this.inAssignment = true;
-            this.assignmentType = leftHandType;
+                this.Visit(context.variable());
 
-            string rightHandType = (string) this.Visit(context.logicalOrExpression());
+                this.inAssignment = true;
 
-            this.inAssignment = false;
-            this.assignmentType = "";
+                this.Visit(context.logicalOrExpression());
 
-            if (leftHandType != rightHandType) {
-                this.EmitSemanticErrorMessage($"Assignment of {leftHandType} expected, but found {rightHandType}", context);
+                this.inAssignment = false;
+                this.assignmentType = "";
+
             }
-
-            */
+            
             return null;
             
         }
+     
 
         #endregion
 
