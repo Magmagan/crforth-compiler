@@ -8,11 +8,12 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
 
-namespace CrimsonForthCompiler.Visitors {
+namespace CrimsonForthCompiler.Visitors.ILVisitor {
 
     class ILVisitor : CMinusBaseVisitor<object> {
 
         private readonly SymbolTable symbolTable;
+        private readonly LabelGenerator labelGenerator = new LabelGenerator();
         int visitCount = 0;
 
         private readonly ILWriter writer = new ILWriter();
@@ -21,13 +22,33 @@ namespace CrimsonForthCompiler.Visitors {
             this.symbolTable = symbolTable;
         }
 
+        public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
+            this.writer.EnterFunction();
+            this.Visit(context.declarationList());
+            this.writer.ExitFunction();
+            this.writer.Dump();
+            return null;
+        }
+
         public override object VisitArgumentList([NotNull] CMinusParser.ArgumentListContext context) {
             return base.VisitArgumentList(context);
         }
 
         public override object VisitIterationStatement([NotNull] CMinusParser.IterationStatementContext context) {
 
+            int logicalExpressionLabel = this.labelGenerator.GenerateLabel();
+            int statementBodyLabel = this.labelGenerator.GenerateLabel();
 
+            
+            this.writer.WriteUnconditionalJump(logicalExpressionLabel);
+            
+            this.writer.WriteLabel(statementBodyLabel);
+            this.Visit(context.statement());
+            
+            this.writer.WriteLabel(logicalExpressionLabel);
+            this.Visit(context.logicalOrExpression());
+            
+            this.writer.WriteJumpIfTrue(statementBodyLabel);
 
             return null;
         }
@@ -49,7 +70,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }
@@ -63,7 +84,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }
@@ -77,7 +98,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }
@@ -91,7 +112,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }
@@ -105,7 +126,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }
@@ -119,7 +140,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }
@@ -133,7 +154,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }
@@ -147,7 +168,7 @@ namespace CrimsonForthCompiler.Visitors {
 
             this.visitCount--;
 
-            Console.WriteLine(context.children[1].GetText() + "\n");
+            this.writer.WriteArithmeticOperand(context.children[1].GetText());
 
             return null;
         }

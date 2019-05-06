@@ -8,7 +8,6 @@ namespace CrimsonForthCompiler {
         StringBuilder program;
 
         bool inFunction = false;
-        int nextInstructionAddress = 0;
         Stack<StringBuilder> scopedInstructions;
         StringBuilder fullProgram;
 
@@ -29,6 +28,7 @@ namespace CrimsonForthCompiler {
             if (!this.inFunction)
                 throw new Exception("ILWriter: Attempt to exit function, not in function");
             this.inFunction = false;
+            this.fullProgram.Append(scopedInstructions.Pop());
         }
 
         public void EnterWhile() {
@@ -127,6 +127,18 @@ namespace CrimsonForthCompiler {
 
         }
 
+        public void WriteLabel(int labelNumber) {
+            this.WriteLabelInstruction(labelNumber);
+        }
+
+        public void WriteUnconditionalJump(int labelNumber) {
+            this.WriteBranch(labelNumber);
+        }
+
+        public void WriteJumpIfTrue(int labelNumber) {
+            this.WriteBranchTrue(labelNumber);
+        }
+
         void WriteBitwiseAnd() { // & and s1
             this.WriteInstructionToStackedScope("and", 1);
         }
@@ -191,8 +203,18 @@ namespace CrimsonForthCompiler {
 
         //////////
 
-        
-        
+        void WriteLabelInstruction(int labelNumber) {
+            this.WriteInstructionToStackedScope($"LBL_{labelNumber}", 0);
+        }
+
+        void WriteBranch(int labelNumber) {
+            this.WriteInstructionToStackedScope($"br.s LBL_{labelNumber}", 2);
+        }
+
+        void WriteBranchTrue(int labelNumber) {
+            this.WriteInstructionToStackedScope($"brtrue.s LBL_{labelNumber}", 2);
+        }
+
         //////////
 
         void WritePush(int number) {
@@ -216,9 +238,12 @@ namespace CrimsonForthCompiler {
             if (!this.inFunction) {
                 throw new Exception("ILWriter: Attempt to write instruction out of function");
             }
-            this.scopedInstructions.Peek().AppendLine($"IL{this.nextInstructionAddress.ToString("0000")}:  {instruction}");
-            this.nextInstructionAddress += width;
+            this.scopedInstructions.Peek().AppendLine($"{width}:  {instruction}");
 
+        }
+
+        public void Dump() {
+            Console.WriteLine(this.fullProgram.ToString());
         }
 
         public void Test() {

@@ -8,7 +8,8 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
-using CrimsonForthCompiler.Visitors;
+using CrimsonForthCompiler.Visitors.AnalysisVisitors;
+using CrimsonForthCompiler.Visitors.ILVisitor;
 
 namespace CrimsonForthCompiler {
 
@@ -17,10 +18,10 @@ namespace CrimsonForthCompiler {
         static int Main(string[] args) {
 
             ILWriter writer = new ILWriter();
-            writer.Test();
+            //writer.Test();
 
-            Console.ReadKey();
-            return 0;
+            //Console.ReadKey();
+            //return 0;
 
             Console.Write("File path: ");
             string path = Console.ReadLine().Trim('\"');

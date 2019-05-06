@@ -9,7 +9,7 @@ using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
 
 
-namespace CrimsonForthCompiler.Visitors {
+namespace CrimsonForthCompiler.Visitors.AnalysisVisitors {
 
     class InternalAnalysisVisitor : CMinusBaseVisitor<object> {
 
