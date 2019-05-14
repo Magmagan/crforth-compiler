@@ -23,16 +23,54 @@ namespace CrimsonForthCompiler.Visitors.ILVisitor {
         }
 
         public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
-            this.writer.EnterFunction();
             this.Visit(context.declarationList());
-            this.writer.ExitFunction();
             this.writer.Dump();
+            return null;
+        }
+
+        public override object VisitFunctionDeclaration([NotNull] CMinusParser.FunctionDeclarationContext context) {
+
+            this.writer.EnterFunction(context.ID().GetText(), context.typeSpecifier().GetText());
+            this.Visit(context.compoundStatement());
+            this.writer.ExitFunction();
+
             return null;
         }
 
         public override object VisitArgumentList([NotNull] CMinusParser.ArgumentListContext context) {
             return base.VisitArgumentList(context);
         }
+
+        public override object VisitVariableDeclaration_Variable([NotNull] CMinusParser.VariableDeclaration_VariableContext context) {
+            this.writer.WriteVariableDeclaration(context.ID().GetText());
+            return null;
+        }
+
+        public override object VisitReturnStatement([NotNull] CMinusParser.ReturnStatementContext context) {
+            
+            if (context.logicalOrExpression() != null) {
+                this.Visit(context.logicalOrExpression());
+            }
+
+            this.writer.WriteFunctionReturn();
+
+            return null;
+        }
+
+        public override object VisitFactor([NotNull] CMinusParser.FactorContext context) {
+
+            if (context.variable() != null) {
+                this.writer.WriteLoadVariable(context.variable().GetText());
+            }
+            
+            if (context.NUM() != null) {
+                this.writer.WritePush(int.Parse(context.NUM().GetText()));
+            }
+
+            return base.VisitFactor(context);
+        }
+
+        #region Control Blocks
 
         public override object VisitSelectionStatement([NotNull] CMinusParser.SelectionStatementContext context) {
 
@@ -77,13 +115,7 @@ namespace CrimsonForthCompiler.Visitors.ILVisitor {
             return null;
         }
 
-
-
-        public override object VisitFactor([NotNull] CMinusParser.FactorContext context) {
-            if (this.visitCount > 0)
-                Console.WriteLine(context.GetText());
-            return base.VisitFactor(context);
-        }
+        #endregion
 
         #region Arithmetic Expressions
 
@@ -203,8 +235,12 @@ namespace CrimsonForthCompiler.Visitors.ILVisitor {
 
         public override object VisitExpressionStatement([NotNull] CMinusParser.ExpressionStatementContext context) {
 
-            Console.WriteLine("# " + context.GetText());
-            return base.VisitExpressionStatement(context);
+            if (context.variable() != null) {
+                this.Visit(context.logicalOrExpression());
+                this.writer.WriteStoreVariable(context.variable().GetText());
+            }
+
+            return null;
         }
 
     }

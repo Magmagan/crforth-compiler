@@ -8,19 +8,28 @@ namespace CrimsonForthCompiler {
         StringBuilder program;
 
         bool inFunction = false;
-        Stack<StringBuilder> scopedInstructions;
-        StringBuilder fullProgram;
+        readonly Stack<StringBuilder> scopedInstructions;
+        readonly StringBuilder fullProgram;
+
+        string currentFunctionName;
+        string currentFunctionType;
+        readonly List<string> functionVariables;
+        readonly List<string> functionParameters;
 
         public ILWriter() {
             this.program = new StringBuilder();
             this.scopedInstructions = new Stack<StringBuilder>();
             this.fullProgram = new StringBuilder();
+            this.functionVariables = new List<string>();
+            this.functionParameters = new List<string>();
         }
 
-        public void EnterFunction() {
+        public void EnterFunction(string functionName, string functionType) {
             if (this.inFunction)
                 throw new Exception("ILWriter: Attempt to enter function, already in function");
             this.scopedInstructions.Push(new StringBuilder());
+            this.currentFunctionName = functionName;
+            this.currentFunctionType = functionType;
             this.inFunction = true;
         }
 
@@ -28,15 +37,30 @@ namespace CrimsonForthCompiler {
             if (!this.inFunction)
                 throw new Exception("ILWriter: Attempt to exit function, not in function");
             this.inFunction = false;
-            this.fullProgram.Append(scopedInstructions.Pop());
+
+            string init = ".locals init (";
+            for (int i = 0; i < this.functionVariables.Count; i++) {
+                init += $"[{i}] int32 {this.functionVariables[i]}, ";
+            }
+            init = init.Substring(0, init.Length - 2);
+            init += ")\n";
+            this.functionVariables.Clear();
+
+            this.fullProgram.Append(
+                $".method static {(this.currentFunctionType == "int" ? "int32" : "void" )} {this.currentFunctionName}() {{\n" +
+                (this.currentFunctionName == "main" ? ".entrypoint\n" : "") +
+                init +
+                this.scopedInstructions.Pop() +
+                "} \n"
+            );
         }
 
-        public void EnterWhile() {
-
+        public void WriteVariableDeclaration(string variableName) {
+            this.functionVariables.Add(variableName);
         }
 
-        public void ExitWhile() {
-
+        public void WriteFunctionReturn() {
+            this.WriteReturn();
         }
 
         public void WriteArithmeticOperand(string operand) {
@@ -136,12 +160,25 @@ namespace CrimsonForthCompiler {
         }
 
         public void WriteJumpIfTrue(int labelNumber) {
-            this.WriteUnaryBitwiseNot();
+            this.WriteLoadConstant(0);
+            this.WriteLogicalEquality();
             this.WriteBranchFalse(labelNumber);
         }
 
         public void WriteJumpIfFalse(int labelNumber) {
             this.WriteBranchFalse(labelNumber);
+        }
+
+        public void WriteStoreVariable(string variableName) {
+            this.WriteStoreLocation(variableName);
+        }
+
+        public void WriteLoadVariable(string variableName) {
+            this.WriteLoadLocation(variableName);
+        }
+        
+        public void WritePush(int number) {
+            this.WriteLoadConstant(number);
         }
 
         void WriteBitwiseAnd() { // & and s1
@@ -209,7 +246,7 @@ namespace CrimsonForthCompiler {
         //////////
 
         void WriteLabelInstruction(int labelNumber) {
-            this.WriteInstructionToStackedScope($"LBL_{labelNumber}", 0);
+            this.WriteInstructionToStackedScope($"LBL_{labelNumber}:", 0);
         }
 
         void WriteBranch(int labelNumber) {
@@ -222,10 +259,24 @@ namespace CrimsonForthCompiler {
 
         //////////
 
-        void WritePush(int number) {
+        void WriteStoreLocation(string variableName) {
+            this.WriteInstructionToStackedScope($"stloc.s {variableName}", 2);
+        }
+
+        void WriteLoadLocation(string variableName) {
+            this.WriteInstructionToStackedScope($"ldloc.s {variableName}", 2);
+        }
+
+        //////////
+
+        void WriteLoadConstant(int number) {
             this.WriteInstructionToStackedScope($"ldc.i4 {number}", 2);
         }
         
+        void WriteReturn() {
+            this.WriteInstructionToStackedScope("ret", 1);
+        }
+
         void WriteDup() { // DUP dup s1
             this.WriteInstructionToStackedScope("dup", 1);
         }
@@ -243,16 +294,20 @@ namespace CrimsonForthCompiler {
             if (!this.inFunction) {
                 throw new Exception("ILWriter: Attempt to write instruction out of function");
             }
-            this.scopedInstructions.Peek().AppendLine($"{width}:  {instruction}");
-
+            // this.scopedInstructions.Peek().AppendLine($"{width}:  {instruction}");
+            this.scopedInstructions.Peek().AppendLine(instruction);
         }
 
         public void Dump() {
+            Console.WriteLine(
+                ".assembly extern mscorlib {}\n" +
+                ".assembly App {}\n"
+            );
             Console.WriteLine(this.fullProgram.ToString());
         }
 
         public void Test() {
-            this.EnterFunction();
+            this.EnterFunction("main", "int");
             this.WriteAdd();
             this.WriteArithmeticOperand("!=");
             this.WriteDrop();
