@@ -169,8 +169,7 @@ multiplyExpression
     ;
 
 functionCall //OK
-    : ID '(' argumentList ')'
-    | ID '(' ')'
+    : ID '(' argumentList? ')'
     ;
 
 argumentList
