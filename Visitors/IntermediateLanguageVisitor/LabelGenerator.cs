@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CrimsonForthCompiler.Visitors.ILVisitor {
+namespace CrimsonForthCompiler.Visitors.IntermediateLanguageVisitor {
     class LabelGenerator {
 
         int internalCount;

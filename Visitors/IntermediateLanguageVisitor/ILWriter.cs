@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CrimsonForthCompiler {
+namespace CrimsonForthCompiler.Visitors.IntermediateLanguageVisitor {
     class ILWriter {
-
-        StringBuilder program;
 
         bool inFunction = false;
         readonly Stack<StringBuilder> scopedInstructions;
@@ -17,7 +15,6 @@ namespace CrimsonForthCompiler {
         readonly List<string> functionParameters;
 
         public ILWriter() {
-            this.program = new StringBuilder();
             this.scopedInstructions = new Stack<StringBuilder>();
             this.fullProgram = new StringBuilder();
             this.functionVariables = new List<string>();

@@ -17,12 +17,6 @@ namespace CrimsonForthCompiler {
 
         static int Main(string[] args) {
 
-            ILWriter writer = new ILWriter();
-            //writer.Test();
-
-            //Console.ReadKey();
-            //return 0;
-
             Console.Write("File path: ");
             string path = Console.ReadLine().Trim('\"');
 
@@ -70,8 +64,8 @@ namespace CrimsonForthCompiler {
 
             Console.WriteLine("\n----------\n");
 
-            ILVisitor ilVisitor = new ILVisitor(globalVisitor.symbolTable);
-            ilVisitor.Visit(tree);
+            // ILVisitor ilVisitor = new ILVisitor(globalVisitor.symbolTable);
+            // ilVisitor.Visit(tree);
 
             Console.WriteLine("\n----------\n");
 
