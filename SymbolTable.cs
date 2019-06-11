@@ -34,7 +34,7 @@ namespace CrimsonForthCompiler {
 
         public override string ToString() {
             string s = "";
-            foreach(Symbol symbol in symbols) {
+            foreach(Symbol symbol in this.symbols) {
                 s += symbol;
             }
             return s;

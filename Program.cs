@@ -9,7 +9,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
 using CrimsonForthCompiler.Visitors.AnalysisVisitors;
-using CrimsonForthCompiler.Visitors.ILVisitor;
+using CrimsonForthCompiler.Visitors.IntermediateLanguageVisitor;
 
 namespace CrimsonForthCompiler {
 

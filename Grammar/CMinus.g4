@@ -10,16 +10,16 @@ program
     : declarationList
     ;
 
-// ILVisitor
-// CRVisitor
+// ILVisitor OK
+// CRVisitor OK
 declarationList
     : declaration
     | declarationList declaration
     ;
 
-// ILVisitor
-// CRVisitor
-declaration //OK
+// ILVisitor OK
+// CRVisitor OK
+declaration
     : variableDeclaration
     | functionDeclaration
     | structDeclaration
@@ -27,27 +27,27 @@ declaration //OK
 
 // ILVisitor
 // CRVisitor
-structDeclaration //OK
+structDeclaration
     : 'struct' ID '{' structDeclarationList '}'
     ;
 
 // ILVisitor
 // CRVisitor
-structDeclarationList //OK
+structDeclarationList
     : structVariableDeclaration #structDeclarationList_OneDeclaration
     | structDeclarationList structVariableDeclaration #structDeclarationList_ManyDeclarations
     ;
 
 // ILVisitor
 // CRVisitor
-structVariableDeclaration //OK
+structVariableDeclaration
     : typeSpecifier ID ';' #structVariableDeclaration_Variable
     | typeSpecifier ID '[' NUM ']' ';' #structVariableDeclaration_Array
     ;
 
 // ILVisitor
 // CRVisitor
-variableDeclaration //OK
+variableDeclaration
     : typeSpecifier ID ';' #variableDeclaration_Variable
     | typeSpecifier ID '[' NUM ']' ';' #variableDeclaration_Array
     ;
@@ -70,40 +70,40 @@ pointer
 
 // ILVisitor
 // CRVisitor
-functionDeclaration //OK
+functionDeclaration
     : typeSpecifier ID '(' parameters ')' compoundStatement
     ;
 
 // ILVisitor
 // CRVisitor
-parameters //OK
+parameters
     : parameterList #parameters_WithParameterList
     | 'void' #parameters_Void
     ;
 
 // ILVisitor
 // CRVisitor
-parameterList //OK
+parameterList
     : parameter #parameterList_OneParameter
     | parameterList ',' parameter #parameterList_ManyParameters
     ;
 
 // ILVisitor
 // CRVisitor
-parameter //OK
+parameter
     : typeSpecifier ID #parameter_Variable
     | typeSpecifier ID '[' ']' #parameter_Array
     ;
 
 // ILVisitor
 // CRVisitor
-compoundStatement //OK
+compoundStatement
     : '{' statementList? '}'
     ;
 
 // ILVisitor
 // CRVisitor
-statementList //OK
+statementList
     : statement
     | statementList statement
     ;
@@ -122,27 +122,27 @@ statement
 
 // ILVisitor
 // CRVisitor
-expressionStatement //OK
+expressionStatement
     : variable '=' logicalOrExpression ';'
     | ';'
     ;
 
 // ILVisitor
 // CRVisitor
-selectionStatement //OK
+selectionStatement
     : 'if' '(' logicalOrExpression ')' ifStatement=statement
     | 'if' '(' logicalOrExpression ')' ifStatement=statement ('else' elseStatement=statement)
     ;
 
 // ILVisitor
 // CRVisitor
-iterationStatement //OK
+iterationStatement
     : 'while' '(' logicalOrExpression ')' statement
     ;
 
 // ILVisitor
 // CRVisitor
-returnStatement //OK
+returnStatement
     : 'return' logicalOrExpression? ';'
     ;
 
@@ -152,7 +152,7 @@ variable
     : '*' variable #variable_Pointer
     | variable '.' variable #variable_StructAccess
     | variable '[' logicalOrExpression ']' #variable_ArrayAccess
-    | ID #variable_ID //OK
+    | ID #variable_ID
     ;
 
 // ILVisitor
@@ -163,9 +163,9 @@ unaryExpression
     | '~' factor
     | '!' factor
     ;
+
 // ILVisitor
 // CRVisitor
-
 factor
     : '(' logicalOrExpression ')'
     | unaryExpression
@@ -232,7 +232,7 @@ multiplyExpression
 
 // ILVisitor
 // CRVisitor
-functionCall //OK
+functionCall
     : ID '(' argumentList? ')'
     ;
 
