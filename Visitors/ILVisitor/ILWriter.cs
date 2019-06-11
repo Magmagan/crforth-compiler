@@ -33,6 +33,10 @@ namespace CrimsonForthCompiler {
             this.inFunction = true;
         }
 
+        public void CallFunction(string functionName) {
+            this.WriteFunctionCall(functionName, "");
+        }
+
         public void ExitFunction() {
             if (!this.inFunction)
                 throw new Exception("ILWriter: Attempt to exit function, not in function");
@@ -287,6 +291,10 @@ namespace CrimsonForthCompiler {
 
         void WriteNop() { // NOP nop s1
             this.WriteInstructionToStackedScope("nop", 1);
+        }
+
+        void WriteFunctionCall(string functionName, string args) {
+            this.WriteInstructionToStackedScope($"call {functionName} {args}", 1);
         }
 
         void WriteInstructionToStackedScope(string instruction, int width) {

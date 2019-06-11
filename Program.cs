@@ -57,6 +57,8 @@ namespace CrimsonForthCompiler {
                 return -1;
             }
 
+            Console.WriteLine(globalVisitor.symbolTable.ToString());
+
             InternalAnalysisVisitor internalVisitor = new InternalAnalysisVisitor(globalVisitor.symbolTable);
             internalVisitor.Visit(tree);
 

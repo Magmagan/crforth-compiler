@@ -37,6 +37,19 @@ namespace CrimsonForthCompiler.Visitors.ILVisitor {
             return null;
         }
 
+        public override object VisitFunctionCall([NotNull] CMinusParser.FunctionCallContext context) {
+
+            if (context.argumentList() != null) {
+                this.Visit(context.argumentList());
+            }
+
+            this.writer.CallFunction(context.ID().GetText());
+
+
+
+            return base.VisitFunctionCall(context);
+        }
+
         public override object VisitArgumentList([NotNull] CMinusParser.ArgumentListContext context) {
             return base.VisitArgumentList(context);
         }
