@@ -32,6 +32,14 @@ namespace CrimsonForthCompiler {
             return this.symbolTypes.Contains(symbolType);
         }
 
+        public override string ToString() {
+            string s = "";
+            foreach(Symbol symbol in symbols) {
+                s += symbol;
+            }
+            return s;
+        }
+
         #endregion
 
         #region Symbols
