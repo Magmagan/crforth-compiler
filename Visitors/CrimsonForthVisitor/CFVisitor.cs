@@ -10,7 +10,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
     class CrimsonForthVisitor : CMinusBaseVisitor<object> {
 
-        private readonly CFWriter writer = new CFWriter();
+        public readonly CFWriter writer = new CFWriter();
+        private readonly LabelGenerator labelGenerator = new LabelGenerator();
 
         public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
             this.Visit(context.declarationList());
@@ -48,23 +49,67 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         // TODO
+        public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {
+            return base.VisitCompoundStatement(context);
+        }
+
+        // TODO
         public override object VisitExpressionStatement([NotNull] CMinusParser.ExpressionStatementContext context) {
             return base.VisitExpressionStatement(context);
         }
 
-        // TODO
         public override object VisitSelectionStatement([NotNull] CMinusParser.SelectionStatementContext context) {
-            return base.VisitSelectionStatement(context);
+
+            string endLabel = this.labelGenerator.GenerateIfLabel();
+
+            this.Visit(context.logicalOrExpression());
+
+            if (context.elseStatement != null) {
+                string elseLabel = this.labelGenerator.GenerateIfLabel();
+
+                this.writer.WriteConditionalJump(elseLabel);
+                this.Visit(context.ifStatement);
+                this.writer.WriteUnconditionalJump(endLabel);
+
+                this.writer.WriteLabel(elseLabel);
+                this.Visit(context.elseStatement);
+            }
+            else {
+                this.writer.WriteConditionalJump(endLabel);
+                this.Visit(context.ifStatement);
+            }
+
+            this.writer.WriteLabel(endLabel);
+
+            return null;
         }
 
-        // TODO
         public override object VisitIterationStatement([NotNull] CMinusParser.IterationStatementContext context) {
-            return base.VisitIterationStatement(context);
+
+            string expressionLabel = this.labelGenerator.GenerateGenericLabel();
+            string loopLabel = this.labelGenerator.GenerateWhileLabel();
+
+            this.writer.WriteUnconditionalJump(expressionLabel);
+
+            this.writer.WriteLabel(loopLabel);
+            this.Visit(context.statement());
+
+            this.writer.WriteLabel(expressionLabel);
+            this.Visit(context.logicalOrExpression());
+
+            this.writer.WriteConditionalJump(loopLabel);
+
+            return null;
         }
 
-        // TODO
         public override object VisitReturnStatement([NotNull] CMinusParser.ReturnStatementContext context) {
-            return base.VisitReturnStatement(context);
+
+            if (context.logicalOrExpression() != null)
+                this.Visit(context.logicalOrExpression());
+
+            this.writer.WriteFunctionExit();
+
+            return null;
         }
 
         // TODO
@@ -117,7 +162,6 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        
         public override object VisitComparisonExpressionEquals_Equals([NotNull] CMinusParser.ComparisonExpressionEquals_EqualsContext context) {
 
             this.Visit(context.comparisonExpression());

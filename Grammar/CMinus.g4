@@ -111,8 +111,8 @@ statementList
 // ILVisitor
 // CRVisitor
 statement
-    : expressionStatement
-    | compoundStatement
+    : compoundStatement
+    | expressionStatement
     | selectionStatement
     | iterationStatement
     | returnStatement
@@ -128,20 +128,17 @@ expressionStatement
     ;
 
 // ILVisitor
-// CRVisitor
 selectionStatement
     : 'if' '(' logicalOrExpression ')' ifStatement=statement
     | 'if' '(' logicalOrExpression ')' ifStatement=statement ('else' elseStatement=statement)
     ;
 
 // ILVisitor
-// CRVisitor
 iterationStatement
     : 'while' '(' logicalOrExpression ')' statement
     ;
 
 // ILVisitor
-// CRVisitor
 returnStatement
     : 'return' logicalOrExpression? ';'
     ;

@@ -6,20 +6,65 @@ using CrimsonForthCompiler.Visitors;
 namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
     class CFWriter : LanguageWriter {
 
-        StringBuilder buffer = new StringBuilder();
+        bool moduloWasUsed = false;
+        bool divisionWasUsed = false;
+        private readonly StringBuilder buffer = new StringBuilder();
+
+        public void WriteModuloFunction() {
+            // : nminusm ( n m -- n-m m ) SWAP OVER - SWAP ;
+            // : modulorecursive OVER OVER < 0= IF nminusm recurse THEN ;
+            // : modulo ( n m -- n%m ) modulorecursive DROP ;
+            // 10 4 modulo ( expect 2 on stack )
+        }
+
+        public override void WriteNoOperation(string stackSelector) {
+            switch(stackSelector) {
+                case "PSP":
+                case "RSP": {
+                    this.buffer.AppendLine($"NOP {stackSelector}");
+                    break;
+                }
+                default: {
+                    this.buffer.AppendLine("NOP");
+                    break;
+                }
+            }
+        }
+
+        public override void WriteFunctionExit() {
+            this.WriteNoOperation("RSP");
+            this.WriteUnconditionalJump();
+        }
+
+        public override void WriteLabel(string label) {
+            this.buffer.Append($"{label}: ");
+        }
+
+        public override void WriteUnconditionalJump() {
+            this.buffer.AppendLine("JUMP");
+        }
+
+        public override void WriteUnconditionalJump(string label) {
+            this.buffer.AppendLine(label);
+            this.buffer.AppendLine("JUMP");
+        }
+
+        public override void WriteConditionalJump(string label) {
+            this.buffer.AppendLine($"IF {label}");
+        }
 
         public override void WriteUnaryArithmeticExpression(string operand) {
             switch (operand) {
                 case "-": {
-                    this.buffer.Append("NEGATE");
+                    this.buffer.AppendLine("NEGATE");
                     break;
                 }
                 case "~": {
-                    this.buffer.Append("INVERT");
+                    this.buffer.AppendLine("INVERT");
                     break;
                 }
                 case "!": {
-                    this.buffer.Append("=0");
+                    this.buffer.AppendLine("=0");
                     break;
                 }
             }
@@ -28,72 +73,78 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         public override void WriteBinaryArithmeticExpression(string operand) {
             switch (operand) {
                 case "&": {
-                    this.buffer.Append("AND");
+                    this.buffer.AppendLine("AND");
                     break;
                 }
                 case "^": {
-                    this.buffer.Append("XOR");
+                    this.buffer.AppendLine("XOR");
                     break;
                 }
                 case "|": {
-                    this.buffer.Append("OR");
+                    this.buffer.AppendLine("OR");
                     break;
                 }
                 case "==": {
-                    this.buffer.Append("=");
+                    this.buffer.AppendLine("=");
                     break;
                 }
                 case "!=": {
-                    this.buffer.Append("<>");
+                    this.buffer.AppendLine("<>");
                     break;
                 }
                 case "<=": {
-                    this.buffer.Append("<=");
+                    this.buffer.AppendLine("<=");
                     break;
                 }
                 case "<": {
-                    this.buffer.Append("<");
+                    this.buffer.AppendLine("<");
                     break;
                 }
                 case ">": {
-                    this.buffer.Append("<=");
-                    this.buffer.Append("=0");
+                    this.buffer.AppendLine("<=");
+                    this.buffer.AppendLine("=0");
                     break;
                 }
                 case ">=": {
-                    this.buffer.Append("<");
-                    this.buffer.Append("=0");
+                    this.buffer.AppendLine("<");
+                    this.buffer.AppendLine("=0");
                     break;
                 }
                 case ">>": {
-                    this.buffer.Append("RSHIFT");
+                    this.buffer.AppendLine("RSHIFT");
                     break;
                 }
                 case "<<": {
-                    this.buffer.Append("LSHIFT");
+                    this.buffer.AppendLine("LSHIFT");
                     break;
                 }
                 case "+": {
-                    this.buffer.Append("+");
+                    this.buffer.AppendLine("+");
                     break;
                 }
                 case "-": {
-                    this.buffer.Append("-");
+                    this.buffer.AppendLine("-");
                     break;
                 }
                 case "*": {
-                    this.buffer.Append("*");
+                    this.buffer.AppendLine("*");
                     break;
                 }
                 // TODO
                 case "/": {
+                    this.divisionWasUsed = true;
                     break;
                 }
                 // TODO
                 case "%": {
+                    this.moduloWasUsed = true;
                     break;
                 }
             }
+        }
+
+        public string DumpBuffer() {
+            return this.buffer.ToString();
         }
 
     }
