@@ -117,7 +117,7 @@ statement
     | iterationStatement
     | returnStatement
     | variableDeclaration
-    | functionCall
+    | functionCall ';'
     ;
 
 // ILVisitor
@@ -155,10 +155,7 @@ variable
 // ILVisitor
 // CRVisitor
 unaryExpression
-    : '&' factor
-    | '-' factor
-    | '~' factor
-    | '!' factor
+    : ('&'|'-'|'~'|'!') factor
     ;
 
 // ILVisitor
