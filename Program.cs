@@ -10,6 +10,7 @@ using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
 using CrimsonForthCompiler.Visitors.AnalysisVisitors;
 using CrimsonForthCompiler.Visitors.IntermediateLanguageVisitor;
+using CrimsonForthCompiler.Visitors.CrimsonForthVisitor;
 
 namespace CrimsonForthCompiler {
 
@@ -66,6 +67,11 @@ namespace CrimsonForthCompiler {
 
             // ILVisitor ilVisitor = new ILVisitor(globalVisitor.symbolTable);
             // ilVisitor.Visit(tree);
+
+            CrimsonForthVisitor CFVisitor = new CrimsonForthVisitor();
+            CFVisitor.Visit(tree);
+
+            Console.WriteLine(CFVisitor.writer.DumpBuffer());
 
             Console.WriteLine("\n----------\n");
 
