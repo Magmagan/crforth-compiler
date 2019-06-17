@@ -7,7 +7,10 @@ using Antlr4.Runtime.Tree;
 using CrimsonForthCompiler.Grammar;
 
 namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
+
     class CrimsonForthVisitor : CMinusBaseVisitor<object> {
+
+        private readonly CFWriter writer = new CFWriter();
 
         public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
             this.Visit(context.declarationList());
