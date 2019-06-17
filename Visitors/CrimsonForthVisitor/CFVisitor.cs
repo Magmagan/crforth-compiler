@@ -107,34 +107,65 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return base.VisitLogicalAndExpression_And(context);
         }
 
-        // TODO
         public override object VisitBitwiseExpression_Bitwise([NotNull] CMinusParser.BitwiseExpression_BitwiseContext context) {
-            return base.VisitBitwiseExpression_Bitwise(context);
+
+            this.Visit(context.bitwiseExpression());
+            this.Visit(context.comparisonExpressionEquals());
+
+            this.writer.WriteBinaryArithmeticExpression(context.children[1].GetText());
+
+            return null;
         }
 
-        // TODO
+        
         public override object VisitComparisonExpressionEquals_Equals([NotNull] CMinusParser.ComparisonExpressionEquals_EqualsContext context) {
-            return base.VisitComparisonExpressionEquals_Equals(context);
+
+            this.Visit(context.comparisonExpression());
+            this.Visit(context.comparisonExpressionEquals());
+
+            this.writer.WriteBinaryArithmeticExpression(context.children[1].GetText());
+
+            return null;
         }
 
-        // TODO
         public override object VisitComparisonExpression_Comparison([NotNull] CMinusParser.ComparisonExpression_ComparisonContext context) {
-            return base.VisitComparisonExpression_Comparison(context);
+
+            this.Visit(context.comparisonExpression());
+            this.Visit(context.shiftExpression());
+
+            this.writer.WriteBinaryArithmeticExpression(context.children[1].GetText());
+
+            return null;
         }
 
-        // TODO
         public override object VisitShiftExpression_Shift([NotNull] CMinusParser.ShiftExpression_ShiftContext context) {
-            return base.VisitShiftExpression_Shift(context);
+
+            this.Visit(context.shiftExpression());
+            this.Visit(context.sumExpression());
+
+            this.writer.WriteBinaryArithmeticExpression(context.children[1].GetText());
+
+            return null;
         }
 
-        // TODO
         public override object VisitSumExpression_Sum([NotNull] CMinusParser.SumExpression_SumContext context) {
-            return base.VisitSumExpression_Sum(context);
+
+            this.Visit(context.sumExpression());
+            this.Visit(context.multiplyExpression());
+
+            this.writer.WriteBinaryArithmeticExpression(context.children[1].GetText());
+
+            return null;
         }
 
-        // TODO
         public override object VisitMultiplyExpression_Multiplication([NotNull] CMinusParser.MultiplyExpression_MultiplicationContext context) {
-            return base.VisitMultiplyExpression_Multiplication(context);
+
+            this.Visit(context.multiplyExpression());
+            this.Visit(context.factor());
+
+            this.writer.WriteBinaryArithmeticExpression(context.children[1].GetText());
+
+            return null;
         }
 
         // TODO

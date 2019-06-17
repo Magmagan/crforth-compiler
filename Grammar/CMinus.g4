@@ -189,42 +189,36 @@ logicalAndExpression
     ;
 
 // ILVisitor
-// CRVisitor
 bitwiseExpression
     : bitwiseExpression ('&'|'^'|'|') comparisonExpressionEquals #bitwiseExpression_Bitwise
     | comparisonExpressionEquals #bitwiseExpression_NoBitwise
     ;
 
 // ILVisitor
-// CRVisitor
 comparisonExpressionEquals
     : comparisonExpressionEquals ('=='|'!=') comparisonExpression #comparisonExpressionEquals_Equals
     | comparisonExpression #comparisonExpressionEquals_NoEquals
     ;
 
 // ILVisitor
-// CRVisitor
 comparisonExpression
     : comparisonExpression ('<='|'<'|'>'|'>=') shiftExpression #comparisonExpression_Comparison
     | shiftExpression #comparisonExpression_NoComparison
     ;
 
 // ILVisitor
-// CRVisitor
 shiftExpression
     : shiftExpression ('>>'|'<<') sumExpression #shiftExpression_Shift
     | sumExpression #shiftExpression_NoShift
     ;
 
 // ILVisitor
-// CRVisitor
 sumExpression
     : sumExpression ('+'|'-') multiplyExpression #sumExpression_Sum
     | multiplyExpression #sumExpression_NoSum
     ;
 
 // ILVisitor
-// CRVisitor
 multiplyExpression
     : multiplyExpression ('*'|'/'|'%') factor #multiplyExpression_Multiplication
     | factor #multiplyExpression_NoMultiplication

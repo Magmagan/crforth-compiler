@@ -5,7 +5,9 @@ using System.Text;
 namespace CrimsonForthCompiler.Visitors {
     abstract class LanguageWriter {
 
-        public abstract void WriteExpression(string operand);
+        public abstract void WriteBinaryArithmeticExpression(string operand);
+
+        public abstract void WriteUnaryArithmeticExpression(string operand);
 
     }
 }
