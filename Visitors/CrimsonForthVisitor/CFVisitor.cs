@@ -12,6 +12,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         public readonly CFWriter writer = new CFWriter();
         private readonly LabelGenerator labelGenerator = new LabelGenerator();
+        private int inExpression = 0;
 
         public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
             this.Visit(context.declarationList());
@@ -132,9 +133,28 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return base.VisitVariable_ID(context);
         }
 
-        // TODO
+        // TODO -- &
         public override object VisitUnaryExpression([NotNull] CMinusParser.UnaryExpressionContext context) {
-            return base.VisitUnaryExpression(context);
+
+            if (this.inExpression != 0)
+                this.writer.ThrowCompilerException("Unary operator on LHS of expression?");
+
+            string unaryOperator = context.children[0].GetText();
+
+            switch (unaryOperator) {
+                case "-":
+                case "~":
+                case "!": {
+                    this.Visit(context.factor());
+                    this.writer.WriteUnaryArithmeticExpression(unaryOperator);
+                    break;
+                }
+                case "&": {
+                    break;
+                }
+            }
+
+            return null;
         }
 
         // TODO
@@ -144,7 +164,11 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         // TODO
         public override object VisitLogicalOrExpression_Or([NotNull] CMinusParser.LogicalOrExpression_OrContext context) {
-            return base.VisitLogicalOrExpression_Or(context);
+            this.inExpression++;
+            base.VisitLogicalOrExpression_Or(context);
+            this.inExpression--;
+
+            return null;
         }
 
         // TODO
@@ -212,14 +236,17 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        // TODO
         public override object VisitFunctionCall([NotNull] CMinusParser.FunctionCallContext context) {
-            return base.VisitFunctionCall(context);
-        }
 
-        // TODO
-        public override object VisitArgumentList([NotNull] CMinusParser.ArgumentListContext context) {
-            return base.VisitArgumentList(context);
+            if (context.argumentList() != null)
+                this.Visit(context.argumentList());
+
+            string functionName = context.ID().GetText();
+            string functionLabel = this.labelGenerator.GenerateFunctionLabel(functionName);
+
+            this.writer.WriteFunctionCall(functionLabel);
+
+            return null;
         }
 
     }

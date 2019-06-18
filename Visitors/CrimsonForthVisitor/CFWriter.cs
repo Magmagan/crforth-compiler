@@ -17,6 +17,24 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             // 10 4 modulo ( expect 2 on stack )
         }
 
+        public override void WriteImmediate(int number) {
+            this.buffer.AppendLine($"{number}");
+        }
+
+        public override void WriteImmediate(string number) {
+            this.buffer.AppendLine($"{int.Parse(number)}");
+        }
+
+        public override void WriteFunctionCall(string functionLabel) {
+            this.WriteNoOperation("RSP");
+            this.buffer.AppendLine("PC>");
+            this.WriteImmediate(6);
+            this.WriteBinaryArithmeticExpression("+");
+            this.WriteNoOperation("PSP");
+            this.WriteUnconditionalJump(functionLabel);
+            this.WriteNoOperation("PSP");
+        }
+
         public override void WriteNoOperation(string stackSelector) {
             switch(stackSelector) {
                 case "PSP":
