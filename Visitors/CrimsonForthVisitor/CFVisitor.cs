@@ -137,7 +137,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         public override object VisitUnaryExpression([NotNull] CMinusParser.UnaryExpressionContext context) {
 
             if (this.inExpression != 0)
-                this.writer.ThrowCompilerException("Unary operator on LHS of expression?");
+                this.ThrowCompilerException("Unary operator on LHS of expression?");
 
             string unaryOperator = context.children[0].GetText();
 
@@ -247,6 +247,16 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             this.writer.WriteFunctionCall(functionLabel);
 
             return null;
+        }
+
+        private void ThrowCompilerException(string exception) {
+            throw new CompilerException(exception);
+        }
+
+        public class CompilerException : InvalidOperationException {
+            public CompilerException() : base() { }
+            public CompilerException(string exception) : base(exception) { }
+            public CompilerException(string exception, Exception innerException) : base(exception, innerException) { }
         }
 
     }
