@@ -17,6 +17,21 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             // 10 4 modulo ( expect 2 on stack )
         }
 
+        public override void WriteVariableAddress(string name, int address) {
+            this.buffer.Append($"VAR_{name}: ");
+            this.WriteImmediate(address);
+        }
+
+        public override void WriteMemoryAccess(int address) {
+            this.buffer.Append("VAR: ");
+            this.WriteImmediate(address);
+            this.buffer.AppendLine("@");
+        }
+
+        public override void WriteMemoryAccess() {
+            this.buffer.AppendLine("@");
+        }
+
         public override void WriteImmediate(int number) {
             this.buffer.AppendLine($"{number}");
         }
@@ -161,9 +176,20 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             }
         }
 
+        public string Finalize() {
+            if (this.moduloWasUsed) {
+
+            }
+
+            if (this.divisionWasUsed) {
+
+            }
+
+            return this.DumpBuffer();
+        }
+
         public string DumpBuffer() {
             return this.buffer.ToString();
         }
-
     }
 }

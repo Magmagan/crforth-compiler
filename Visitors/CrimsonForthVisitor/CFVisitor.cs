@@ -12,6 +12,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         public readonly CFWriter writer = new CFWriter();
         private readonly LabelGenerator labelGenerator = new LabelGenerator();
+        private readonly MiniSymbolTable symbolTable = new MiniSymbolTable();
         private int inExpression = 0;
 
         public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
@@ -39,6 +40,20 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return base.VisitVariable_StructAccess(context);
         }
 
+        public override object VisitVariableDeclaration_Variable([NotNull] CMinusParser.VariableDeclaration_VariableContext context) {
+            this.symbolTable.AddVariable(context.ID().GetText(), 1);
+            return null;
+        }
+
+        public override object VisitVariableDeclaration_Array([NotNull] CMinusParser.VariableDeclaration_ArrayContext context) {
+            string arrayName = context.ID().GetText();
+            int arraySize = int.Parse(context.NUM().GetText());
+
+            this.symbolTable.AddVariable(arrayName, arraySize);
+
+            return null;
+        }
+
         // TODO
         public override object VisitTypeSpecifier([NotNull] CMinusParser.TypeSpecifierContext context) {
             return base.VisitTypeSpecifier(context);
@@ -56,7 +71,11 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         // TODO
         public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {
-            return base.VisitCompoundStatement(context);
+            this.symbolTable.EnterContext();
+            base.VisitCompoundStatement(context);
+            this.symbolTable.ExitContext();
+
+            return null;
         }
 
         // TODO
@@ -134,7 +153,19 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         // TODO
         public override object VisitVariable_ID([NotNull] CMinusParser.Variable_IDContext context) {
-            return base.VisitVariable_ID(context);
+
+            string variableName = context.ID().GetText();
+
+            if (this.inExpression == 0) {
+                
+            }
+            else {
+                int variableIndex = this.symbolTable.GetVariableIndex(variableName);
+                this.writer.WriteVariableAddress(variableName, variableIndex);
+                this.writer.WriteMemoryAccess();
+            }
+
+            return null;
         }
 
         // TODO -- &
@@ -165,6 +196,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             else {
                 base.VisitFactor(context);
             }
+
+            return null;
+        }
+
+        public override object VisitLogicalOrExpression_NoOr([NotNull] CMinusParser.LogicalOrExpression_NoOrContext context) {
+            this.inExpression++;
+            base.VisitLogicalOrExpression_NoOr(context);
+            this.inExpression--;
 
             return null;
         }
@@ -243,6 +282,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
+        // TODO - DROP if out of expression and function called returns int
         public override object VisitFunctionCall([NotNull] CMinusParser.FunctionCallContext context) {
 
             if (context.argumentList() != null)
@@ -264,6 +304,63 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             public CompilerException() : base() { }
             public CompilerException(string exception) : base(exception) { }
             public CompilerException(string exception, Exception innerException) : base(exception, innerException) { }
+        }
+
+        public class MiniSymbolTable {
+
+            public struct SymbolEntry {
+                public string SymbolName;
+                public int SymbolIndex;
+                public int SymbolSize;
+            }
+
+            public class Context {
+                public Dictionary<string, SymbolEntry> symbols;
+                public int size;
+            }
+
+            public readonly Stack<Context> contextStack = new Stack<Context>();
+            private int totalSize = 0;
+
+            public void EnterContext() {
+
+                if (this.contextStack.Count > 0) {
+                    this.totalSize += this.contextStack.Peek().size;
+                }
+
+                Context emptyContext = new Context {
+                    size = 0,
+                    symbols = new Dictionary<string, SymbolEntry>()
+                };
+
+                this.contextStack.Push(emptyContext);
+            }
+
+            public void AddVariable(string variableName, int size) {
+                SymbolEntry symbol;
+                symbol.SymbolName = variableName;
+                symbol.SymbolIndex = this.contextStack.Peek().size;
+                symbol.SymbolSize = size;
+
+                this.contextStack.Peek().size += size;
+
+                this.contextStack.Peek().symbols.Add(variableName, symbol);
+            }
+
+            public int GetVariableIndex(string variableName) {
+                return this.contextStack.Peek().symbols[variableName].SymbolIndex + this.totalSize;
+            }
+
+            public void ExitContext() {
+
+                this.contextStack.Pop();
+
+                if (this.contextStack.Count > 0) {
+                    this.totalSize -= this.contextStack.Peek().size;
+                }
+
+            }
+
         }
 
     }
