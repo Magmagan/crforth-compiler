@@ -239,9 +239,9 @@ namespace CrimsonForthCompiler.Visitors.AnalysisVisitors {
         
         public override object VisitExpressionStatement([NotNull] CMinusParser.ExpressionStatementContext context) {
             
-            if (context.variable() != null) {
+            if (context.assignmentVariable() != null) {
 
-                this.Visit(context.variable());
+                this.Visit(context.assignmentVariable());
 
                 this.inAssignment = true;
 

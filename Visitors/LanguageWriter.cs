@@ -32,5 +32,8 @@ namespace CrimsonForthCompiler.Visitors {
         public abstract void WriteMemoryAccess();
 
         public abstract void WriteVariableAddress(string name, int address);
+
+        public abstract void WriteMemoryWrite();
+
     }
 }

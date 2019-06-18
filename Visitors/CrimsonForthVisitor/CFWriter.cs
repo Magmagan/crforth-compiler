@@ -17,6 +17,10 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             // 10 4 modulo ( expect 2 on stack )
         }
 
+        public override void WriteMemoryWrite() {
+            this.buffer.AppendLine("!");
+        }
+
         public override void WriteVariableAddress(string name, int address) {
             this.buffer.Append($"VAR_{name}: ");
             this.WriteImmediate(address);

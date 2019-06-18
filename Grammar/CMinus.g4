@@ -123,7 +123,7 @@ statement
 // ILVisitor
 // CRVisitor
 expressionStatement
-    : variable '=' logicalOrExpression ';'
+    : assignmentVariable '=' logicalOrExpression ';'
     | ';'
     ;
 
@@ -141,6 +141,14 @@ iterationStatement
 // ILVisitor
 returnStatement
     : 'return' logicalOrExpression? ';'
+    ;
+
+assignmentVariable
+    : variable
+    ;
+
+accessVariable
+    : variable
     ;
 
 // ILVisitor
@@ -162,7 +170,7 @@ unaryExpression
 factor
     : '(' logicalOrExpression ')'
     | unaryExpression
-    | variable
+    | accessVariable
     | functionCall
     | NUM
     ;

@@ -45,11 +45,18 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
+        // HEY FIXXX THISSS
         public override object VisitVariableDeclaration_Array([NotNull] CMinusParser.VariableDeclaration_ArrayContext context) {
             string arrayName = context.ID().GetText();
             int arraySize = int.Parse(context.NUM().GetText());
 
-            this.symbolTable.AddVariable(arrayName, arraySize);
+            this.symbolTable.AddVariable(arrayName, arraySize + 1);
+
+            int arrayPosition = this.symbolTable.GetVariableIndex(arrayName);
+
+            this.writer.WriteVariableAddress(arrayName, arrayPosition);
+            this.writer.WriteVariableAddress($"{arrayName}[0]", arrayPosition + 1);
+            this.writer.WriteMemoryWrite();
 
             return null;
         }
@@ -78,9 +85,28 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        // TODO
+        public override object VisitAccessVariable([NotNull] CMinusParser.AccessVariableContext context) {
+            this.Visit(context.variable());
+            this.writer.WriteMemoryAccess();
+
+            return null;
+        }
+
+        public override object VisitAssignmentVariable([NotNull] CMinusParser.AssignmentVariableContext context) {
+            this.Visit(context.variable());
+            this.writer.WriteMemoryWrite();
+
+            return null;
+        }
+
         public override object VisitExpressionStatement([NotNull] CMinusParser.ExpressionStatementContext context) {
-            return base.VisitExpressionStatement(context);
+
+            if (context.assignmentVariable() != null) {
+                this.Visit(context.logicalOrExpression());
+                this.Visit(context.assignmentVariable());
+            }
+
+            return null;
         }
 
         public override object VisitSelectionStatement([NotNull] CMinusParser.SelectionStatementContext context) {
@@ -151,19 +177,13 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return base.VisitVariable_ArrayAccess(context);
         }
 
-        // TODO
+        // TODO - LHS
         public override object VisitVariable_ID([NotNull] CMinusParser.Variable_IDContext context) {
 
             string variableName = context.ID().GetText();
+            int variableIndex = this.symbolTable.GetVariableIndex(variableName);
 
-            if (this.inExpression == 0) {
-                
-            }
-            else {
-                int variableIndex = this.symbolTable.GetVariableIndex(variableName);
-                this.writer.WriteVariableAddress(variableName, variableIndex);
-                this.writer.WriteMemoryAccess();
-            }
+            this.writer.WriteVariableAddress(variableName, variableIndex);
 
             return null;
         }
@@ -348,7 +368,20 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             }
 
             public int GetVariableIndex(string variableName) {
-                return this.contextStack.Peek().symbols[variableName].SymbolIndex + this.totalSize;
+
+                int totalSizeDiff = 0;
+
+                foreach (Context ctx in this.contextStack) {
+                    if (ctx.symbols.ContainsKey(variableName))
+                        if (totalSizeDiff > 0)
+                            return ctx.symbols[variableName].SymbolIndex + this.totalSize - totalSizeDiff - 1;
+                        else
+                            return ctx.symbols[variableName].SymbolIndex + this.totalSize;
+                    else
+                        totalSizeDiff += ctx.size;
+                }
+
+                return -1;
             }
 
             public void ExitContext() {

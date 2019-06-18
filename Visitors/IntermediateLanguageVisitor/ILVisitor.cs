@@ -72,8 +72,8 @@ namespace CrimsonForthCompiler.Visitors.IntermediateLanguageVisitor {
 
         public override object VisitFactor([NotNull] CMinusParser.FactorContext context) {
 
-            if (context.variable() != null) {
-                this.writer.WriteLoadVariable(context.variable().GetText());
+            if (context.accessVariable() != null) {
+                this.writer.WriteLoadVariable(context.accessVariable().GetText());
             }
             
             if (context.NUM() != null) {
@@ -248,9 +248,9 @@ namespace CrimsonForthCompiler.Visitors.IntermediateLanguageVisitor {
 
         public override object VisitExpressionStatement([NotNull] CMinusParser.ExpressionStatementContext context) {
 
-            if (context.variable() != null) {
+            if (context.assignmentVariable() != null) {
                 this.Visit(context.logicalOrExpression());
-                this.writer.WriteStoreVariable(context.variable().GetText());
+                this.writer.WriteStoreVariable(context.assignmentVariable().GetText());
             }
 
             return null;
