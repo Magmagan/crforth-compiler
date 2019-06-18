@@ -35,6 +35,11 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         // TODO
+        public override object VisitVariable_StructAccess([NotNull] CMinusParser.Variable_StructAccessContext context) {
+            return base.VisitVariable_StructAccess(context);
+        }
+
+        // TODO
         public override object VisitTypeSpecifier([NotNull] CMinusParser.TypeSpecifierContext context) {
             return base.VisitTypeSpecifier(context);
         }
@@ -82,12 +87,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
             this.writer.WriteLabel(endLabel);
 
+            this.labelGenerator.IncrementIfCount();
+
             return null;
         }
 
         public override object VisitIterationStatement([NotNull] CMinusParser.IterationStatementContext context) {
 
-            string expressionLabel = this.labelGenerator.GenerateGenericLabel();
+            string expressionLabel = this.labelGenerator.GenerateWhileConditionLabel();
             string loopLabel = this.labelGenerator.GenerateWhileLabel();
 
             this.writer.WriteUnconditionalJump(expressionLabel);
@@ -99,6 +106,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             this.Visit(context.logicalOrExpression());
 
             this.writer.WriteConditionalJump(loopLabel);
+
+            this.labelGenerator.IncrementWhileCount();
 
             return null;
         }
@@ -119,11 +128,6 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         // TODO
-        public override object VisitVariable_StructAccess([NotNull] CMinusParser.Variable_StructAccessContext context) {
-            return base.VisitVariable_StructAccess(context);
-        }
-
-        // TODO
         public override object VisitVariable_ArrayAccess([NotNull] CMinusParser.Variable_ArrayAccessContext context) {
             return base.VisitVariable_ArrayAccess(context);
         }
@@ -135,9 +139,6 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         // TODO -- &
         public override object VisitUnaryExpression([NotNull] CMinusParser.UnaryExpressionContext context) {
-
-            if (this.inExpression != 0)
-                this.ThrowCompilerException("Unary operator on LHS of expression?");
 
             string unaryOperator = context.children[0].GetText();
 
@@ -157,9 +158,15 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        // TODO
         public override object VisitFactor([NotNull] CMinusParser.FactorContext context) {
-            return base.VisitFactor(context);
+            if (context.NUM() != null) {
+                this.writer.WriteImmediate(context.NUM().GetText());
+            }
+            else {
+                base.VisitFactor(context);
+            }
+
+            return null;
         }
 
         // TODO

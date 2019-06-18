@@ -6,10 +6,22 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
     class LabelGenerator {
 
-        int internalCount;
+        private int internalCount;
+        private int internalIfCount;
+        private int internalWhileCount;
 
         public LabelGenerator() {
             this.internalCount = 0;
+            this.internalIfCount = 0;
+            this.internalWhileCount = 0;
+        }
+
+        public void IncrementIfCount() {
+            this.internalIfCount++;
+        }
+
+        public void IncrementWhileCount() {
+            this.internalWhileCount++;
         }
 
         public string GenerateGenericLabel() {
@@ -17,11 +29,15 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public string GenerateIfLabel() {
-            return $"LBL_IF_{this.internalCount++}";
+            return $"LBL_IF_{this.internalIfCount}";
         }
 
         public string GenerateWhileLabel() {
-            return $"LBL_WHILE_{this.internalCount++}";
+            return $"LBL_WHILE_{this.internalWhileCount}";
+        }
+
+        public string GenerateWhileConditionLabel() {
+            return $"LBL_WHILECOND_{this.internalWhileCount}";
         }
 
         public string GenerateFunctionLabel(string functionName) {
