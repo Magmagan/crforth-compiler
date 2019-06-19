@@ -167,14 +167,20 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        // TODO
         public override object VisitVariable_Pointer([NotNull] CMinusParser.Variable_PointerContext context) {
-            return base.VisitVariable_Pointer(context);
+            this.Visit(context.variable());
+            this.writer.WriteMemoryAccess();
+
+            return null;
         }
 
-        // TODO
         public override object VisitVariable_ArrayAccess([NotNull] CMinusParser.Variable_ArrayAccessContext context) {
-            return base.VisitVariable_ArrayAccess(context);
+            this.Visit(context.variable());
+            this.writer.WriteMemoryAccess();
+            this.Visit(context.logicalOrExpression());
+            this.writer.WriteBinaryArithmeticExpression("+");
+
+            return null;
         }
 
         // TODO - LHS

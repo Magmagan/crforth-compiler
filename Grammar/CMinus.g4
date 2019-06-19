@@ -143,16 +143,17 @@ returnStatement
     : 'return' logicalOrExpression? ';'
     ;
 
+// ILVisitor
 assignmentVariable
     : variable
     ;
 
+// ILVisitor
 accessVariable
     : variable
     ;
 
 // ILVisitor
-// CRVisitor
 variable
     : '*' variable #variable_Pointer
     | variable '.' variable #variable_StructAccess
