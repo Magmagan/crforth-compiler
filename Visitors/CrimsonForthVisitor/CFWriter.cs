@@ -11,7 +11,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         private readonly StringBuilder buffer = new StringBuilder();
 
         public void WritePreProgram() {
-            // PUSH 0
+            // PUSH PROGRAM_SIZE
             // R0<
         }
 
@@ -58,7 +58,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteImmediate(int number) {    
-            this.buffer.AppendLine($"{number}");
+            this.buffer.AppendLine($"{Math.Abs(number)}");
             if (number < 0)
                 this.WriteUnaryArithmeticExpression("-");
         }

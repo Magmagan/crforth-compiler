@@ -47,7 +47,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        // HEY FIXXX THISSS
+        // TODO ?
         public override object VisitVariableDeclaration_Array([NotNull] CMinusParser.VariableDeclaration_ArrayContext context) {
             string arrayName = context.ID().GetText();
             int arraySize = int.Parse(context.NUM().GetText());
@@ -71,32 +71,82 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return base.VisitTypeSpecifier(context);
         }
 
-        // TODO
-        public override object VisitPointer([NotNull] CMinusParser.PointerContext context) {
-            return base.VisitPointer(context);
+        public override object VisitParameter_Array([NotNull] CMinusParser.Parameter_ArrayContext context) {
+            string parameterName = context.ID().GetText();
+            this.symbolTable.AddVariable(parameterName, 1);
+
+            int parameterIndex = this.symbolTable.GetVariableIndex(parameterName);
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteBinaryArithmeticExpression("+");
+            this.writer.WriteMemoryWrite();
+
+            return null;
         }
 
-        // TODO
+        public override object VisitParameter_Variable([NotNull] CMinusParser.Parameter_VariableContext context) {
+            string parameterName = context.ID().GetText();
+            this.symbolTable.AddVariable(parameterName, 1);
+
+            int parameterIndex = this.symbolTable.GetVariableIndex(parameterName);
+            this.writer.WriteVariableAddress(parameterName, parameterIndex);
+
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteBinaryArithmeticExpression("+");
+            this.writer.WriteMemoryWrite();
+
+            return null;
+        }
+
+        public override object VisitParameterList_ManyParameters([NotNull] CMinusParser.ParameterList_ManyParametersContext context) {
+            this.Visit(context.parameter());
+            this.Visit(context.parameterList());
+            return null;
+        }
+
         public override object VisitFunctionDeclaration([NotNull] CMinusParser.FunctionDeclarationContext context) {
-            return base.VisitFunctionDeclaration(context);
+
+            string functionLabel = this.labelGenerator.GenerateFunctionLabel(context.ID().GetText());
+            this.writer.WriteLabel(functionLabel);
+
+            this.EnterContext();
+            this.Visit(context.parameters());
+
+            this.Visit(context.compoundStatement());
+            this.ExitContext();
+
+            return null;
         }
 
-        // TODO
-        public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {
-
+        public void EnterContext() {
             this.writer.WriteContextRegisterRead();
             this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
             this.writer.WriteBinaryArithmeticExpression("+");
             this.writer.WriteContextRegisterWrite();
 
             this.symbolTable.EnterContext();
-            base.VisitCompoundStatement(context);
-            this.symbolTable.ExitContext();
+        }
 
-            this.writer.WriteContextRegisterRead();
-            this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
-            this.writer.WriteBinaryArithmeticExpression("-");
-            this.writer.WriteContextRegisterWrite();
+        public void ExitContext() {
+            if (this.symbolTable.contextStack.Count > 1) {
+                this.symbolTable.ExitContext();
+
+                this.writer.WriteContextRegisterRead();
+                this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
+                this.writer.WriteBinaryArithmeticExpression("-");
+                this.writer.WriteContextRegisterWrite();
+            }
+        }
+
+        public void ExitAllContexts() {
+            while (this.symbolTable.contextStack.Count > 1) {
+                this.ExitContext();
+            }
+        }
+
+        public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {
+            this.EnterContext();
+            base.VisitCompoundStatement(context);
+            this.ExitContext();
 
             return null;
         }
@@ -178,6 +228,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             if (context.logicalOrExpression() != null)
                 this.Visit(context.logicalOrExpression());
 
+            this.ExitAllContexts();
+
             this.writer.WriteFunctionExit();
 
             return null;
@@ -211,7 +263,6 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        // TODO -- &
         public override object VisitUnaryExpression([NotNull] CMinusParser.UnaryExpressionContext context) {
 
             string unaryOperator = context.children[0].GetText();

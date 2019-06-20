@@ -5,20 +5,17 @@ grammar CMinus;
  */
 
 // ILVisitor OK
-// CRVisitor OK
 program
     : declarationList
     ;
 
 // ILVisitor OK
-// CRVisitor OK
 declarationList
     : declaration
     | declarationList declaration
     ;
 
 // ILVisitor OK
-// CRVisitor OK
 declaration
     : variableDeclaration
     | functionDeclaration
@@ -46,7 +43,6 @@ structVariableDeclaration
     ;
 
 // ILVisitor
-// CRVisitor
 variableDeclaration
     : typeSpecifier ID ';' #variableDeclaration_Variable
     | typeSpecifier ID '[' NUM ']' ';' #variableDeclaration_Array
@@ -69,7 +65,6 @@ pointer
     ;
 
 // ILVisitor
-// CRVisitor
 functionDeclaration
     : typeSpecifier ID '(' parameters ')' compoundStatement
     ;
