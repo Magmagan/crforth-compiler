@@ -16,7 +16,9 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         private int inExpression = 0;
 
         public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
+            this.symbolTable.EnterContext();
             this.Visit(context.declarationList());
+            this.symbolTable.ExitContext();
             return null;
         }
 
@@ -55,6 +57,9 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             int arrayPosition = this.symbolTable.GetVariableIndex(arrayName);
 
             this.writer.WriteVariableAddress(arrayName, arrayPosition);
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteBinaryArithmeticExpression("+");
+
             this.writer.WriteVariableAddress($"{arrayName}[0]", arrayPosition + 1);
             this.writer.WriteMemoryWrite();
 
@@ -78,9 +83,20 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         // TODO
         public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {
+
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
+            this.writer.WriteBinaryArithmeticExpression("+");
+            this.writer.WriteContextRegisterWrite();
+
             this.symbolTable.EnterContext();
             base.VisitCompoundStatement(context);
             this.symbolTable.ExitContext();
+
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
+            this.writer.WriteBinaryArithmeticExpression("-");
+            this.writer.WriteContextRegisterWrite();
 
             return null;
         }
@@ -183,13 +199,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        // TODO - LHS
         public override object VisitVariable_ID([NotNull] CMinusParser.Variable_IDContext context) {
 
             string variableName = context.ID().GetText();
             int variableIndex = this.symbolTable.GetVariableIndex(variableName);
 
             this.writer.WriteVariableAddress(variableName, variableIndex);
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteBinaryArithmeticExpression("+");
 
             return null;
         }
@@ -202,12 +219,10 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             switch (unaryOperator) {
                 case "-":
                 case "~":
-                case "!": {
+                case "!":
+                case "&": {
                     this.Visit(context.factor());
                     this.writer.WriteUnaryArithmeticExpression(unaryOperator);
-                    break;
-                }
-                case "&": {
                     break;
                 }
             }
@@ -376,15 +391,21 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             public int GetVariableIndex(string variableName) {
 
                 int totalSizeDiff = 0;
+                bool skippedCurrentContext = false;
 
                 foreach (Context ctx in this.contextStack) {
-                    if (ctx.symbols.ContainsKey(variableName))
-                        if (totalSizeDiff > 0)
-                            return ctx.symbols[variableName].SymbolIndex + this.totalSize - totalSizeDiff - 1;
-                        else
-                            return ctx.symbols[variableName].SymbolIndex + this.totalSize;
-                    else
-                        totalSizeDiff += ctx.size;
+                    if (skippedCurrentContext) totalSizeDiff += ctx.size;
+
+                    if (ctx.symbols.ContainsKey(variableName)) {
+                        if (totalSizeDiff > 0) {
+                            return ctx.symbols[variableName].SymbolIndex - totalSizeDiff;
+                        }
+                        else {
+                            return ctx.symbols[variableName].SymbolIndex;
+                        }
+                    }
+
+                    skippedCurrentContext = true;
                 }
 
                 return -1;

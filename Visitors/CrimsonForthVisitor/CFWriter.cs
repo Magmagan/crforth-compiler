@@ -10,11 +10,32 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         bool divisionWasUsed = false;
         private readonly StringBuilder buffer = new StringBuilder();
 
+        public void WritePreProgram() {
+            // PUSH 0
+            // R0<
+        }
+
         public void WriteModuloFunction() {
             // : nminusm ( n m -- n-m m ) SWAP OVER - SWAP ;
             // : modulorecursive OVER OVER < 0= IF nminusm recurse THEN ;
             // : modulo ( n m -- n%m ) modulorecursive DROP ;
             // 10 4 modulo ( expect 2 on stack )
+        }
+
+        public void WriteContextRegisterWrite() {
+            this.WriteRegisterWrite(5);
+        }
+
+        public void WriteContextRegisterRead() {
+            this.WriteRegisterRead(5);
+        }
+
+        public override void WriteRegisterWrite(int register) {
+            this.buffer.AppendLine($"R{Convert.ToString(register, 16)}<");
+        }
+
+        public override void WriteRegisterRead(int register) {
+            this.buffer.AppendLine($"R{Convert.ToString(register, 16)}>");
         }
 
         public override void WriteMemoryWrite() {
@@ -36,12 +57,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             this.buffer.AppendLine("@");
         }
 
-        public override void WriteImmediate(int number) {
+        public override void WriteImmediate(int number) {    
             this.buffer.AppendLine($"{number}");
+            if (number < 0)
+                this.WriteUnaryArithmeticExpression("-");
         }
 
         public override void WriteImmediate(string number) {
-            this.buffer.AppendLine($"{int.Parse(number)}");
+            this.WriteImmediate(int.Parse(number));
         }
 
         public override void WriteFunctionCall(string functionLabel) {
@@ -102,6 +125,15 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
                 }
                 case "!": {
                     this.buffer.AppendLine("=0");
+                    break;
+                }
+                case "&": {
+                    string bufferText = this.buffer.ToString();
+                    string[] bufferLines = bufferText.Split("\r\n");
+                    if (bufferLines[bufferLines.Length - 2] == "@")
+                        this.buffer.Remove(this.buffer.Length - "@\r\n".Length, "@\r\n".Length);
+                    else
+                        Console.WriteLine("EEEERRR");
                     break;
                 }
             }
