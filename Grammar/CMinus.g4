@@ -71,34 +71,29 @@ functionDeclaration
     ;
 
 // ILVisitor
-// CRVisitor
 parameters
     : parameterList #parameters_WithParameterList
     | 'void' #parameters_Void
     ;
 
 // ILVisitor
-// CRVisitor
 parameterList
     : parameter #parameterList_OneParameter
     | parameterList ',' parameter #parameterList_ManyParameters
     ;
 
 // ILVisitor
-// CRVisitor
 parameter
     : typeSpecifier ID #parameter_Variable
     | typeSpecifier ID '[' ']' #parameter_Array
     ;
 
 // ILVisitor
-// CRVisitor
 compoundStatement
     : '{' statementList? '}'
     ;
 
 // ILVisitor
-// CRVisitor
 statementList
     : statement
     | statementList statement
@@ -118,7 +113,6 @@ statement
     ;
 
 // ILVisitor
-// CRVisitor
 expressionStatement
     : assignmentVariable '=' logicalOrExpression ';'
     | ';'
@@ -159,7 +153,6 @@ variable
     ;
 
 // ILVisitor
-// CRVisitor
 unaryExpression
     : ('&'|'-'|'~'|'!') factor
     ;
@@ -224,24 +217,22 @@ multiplyExpression
     ;
 
 // ILVisitor
-// CRVisitor
 functionCall
     : ID '(' argumentList? ')'
     ;
 
 // ILVisitor
-// CRVisitor
 argumentList
     : logicalOrExpression
     | argumentList ',' logicalOrExpression
     ;
 
+// ILVisitor
 rawAssembly
     : ASSEMBLY
     ;
 
 // ILVisitor
-// CRVisitor
 compileUnit
 	: program EOF
 	;

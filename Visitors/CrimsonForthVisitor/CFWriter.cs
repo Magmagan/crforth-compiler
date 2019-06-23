@@ -31,11 +31,11 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public void WriteContextRegisterWrite() {
-            this.WriteRegisterWrite(5);
+            this.WriteRegisterWrite(1);
         }
 
         public void WriteContextRegisterRead() {
-            this.WriteRegisterRead(5);
+            this.WriteRegisterRead(1);
         }
 
         public override void WriteRegisterWrite(int register) {
@@ -225,18 +225,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             }
         }
 
-        public string Finalize() {
-
-            string assembly = this.buffer.ToString();
-
-            if (!this.moduloWasUsed) {
-                assembly = Regex.Replace(assembly, @"(LBL_FN__modulo:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
-            }
-
-            if (!this.divisionWasUsed) {
-                assembly = Regex.Replace(assembly, @"(LBL_FN__divide:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
-            }
-
+        private string RemoveUnusedFunctions(string assembly) {
             if (!this.inputWasUsed) {
                 assembly = Regex.Replace(assembly, @"(LBL_FN_input:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
             }
@@ -244,6 +233,44 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             if (!this.outputWasUsed) {
                 assembly = Regex.Replace(assembly, @"(LBL_FN_output:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
             }
+
+            if (!this.divisionWasUsed) {
+                assembly = Regex.Replace(assembly, @"(LBL_FN__divide:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
+            }
+
+            if (!this.moduloWasUsed) {
+                assembly = Regex.Replace(assembly, @"(LBL_FN__modulo:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
+            }
+
+            return assembly;
+        }
+
+        private string RemoveEmptyScopes(string assembly) {
+
+            string emptyContextEntry =
+                "R1>\r\n"
+                + "0\r\n"
+                + "+\r\n"
+                + "R1<\r\n";
+
+            string emptyContextExit =
+                "R1>\r\n"
+                + "0\r\n"
+                + "-\r\n"
+                + "R1<\r\n";
+
+            assembly = assembly.Replace(emptyContextEntry, "");
+            assembly = assembly.Replace(emptyContextExit, "");
+
+            return assembly;
+        }
+
+        public string Finalize() {
+
+            string assembly = this.buffer.ToString();
+
+            assembly = this.RemoveUnusedFunctions(assembly);
+            assembly = this.RemoveEmptyScopes(assembly);
 
             return assembly.Trim();
         }
