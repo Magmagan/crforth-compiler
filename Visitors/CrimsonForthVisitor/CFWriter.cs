@@ -19,13 +19,6 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             // R0<
         }
 
-        public void WriteModuloFunction() {
-            // : nminusm ( n m -- n-m m ) SWAP OVER - SWAP ;
-            // : modulorecursive OVER OVER < 0= IF nminusm recurse THEN ;
-            // : modulo ( n m -- n%m ) modulorecursive DROP ;
-            // 10 4 modulo ( expect 2 on stack )
-        }
-
         public override void WriteRaw(string assembly) {
             this.buffer.AppendLine(assembly.Replace("$", ""));
         }
