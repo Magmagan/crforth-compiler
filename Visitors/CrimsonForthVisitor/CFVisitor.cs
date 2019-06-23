@@ -123,6 +123,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             this.Visit(context.compoundStatement());
             this.ExitContext();
 
+            this.writer.WriteFunctionExit();
+
             return null;
         }
 

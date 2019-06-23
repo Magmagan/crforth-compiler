@@ -16,13 +16,56 @@ namespace CrimsonForthCompiler {
 
     class Program {
 
+        static string PrependCommonFunctions(string code) {
+
+            string inputFunction =
+                "int input(void) {\n"
+                + "    $IN$\n"
+                + "    $GrB>$\n"
+                + "}\n"
+                + "\n";
+
+            string outputFunction =
+                "void output(void) {\n"
+                + "    $GrB<$\n"
+                + "    $OUT$\n"
+                + "}\n"
+                + "\n";
+
+            string moduloFunction =
+                "int _modulo(int n, int m) {\n"
+                + "    while(n >= m) {\n"
+                + "        n = n - m;\n"
+                + "    }\n"
+                + "    return n;\n"
+                + "}\n"
+                + "\n";
+
+            string divisionFunction =
+                "int _divide(int n, int m) {\n"
+                + "    int r;\n"
+                + "    r = 0;\n"
+                + "    while(n >= m) {\n"
+                + "        n = n - m;\n"
+                + "        r = r + 1;\n"
+                + "    }\n"
+                + "    return r;\n"
+                + "}\n"
+                + "\n";
+
+            return inputFunction + outputFunction + divisionFunction + moduloFunction + code;
+        }
+
         static int Main(string[] args) {
 
             Console.Write("File path: ");
             string path = Console.ReadLine().Trim('\"');
-
             string input = File.ReadAllText(path);
-            AntlrInputStream inputStream = new AntlrInputStream(new StringReader(input));
+            string code = PrependCommonFunctions(input);
+
+            Console.WriteLine(code);
+
+            AntlrInputStream inputStream = new AntlrInputStream(new StringReader(code));
             CMinusLexer lexer = new CMinusLexer(inputStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             CMinusParser parser = new CMinusParser(tokens);
@@ -71,7 +114,7 @@ namespace CrimsonForthCompiler {
             CrimsonForthVisitor CFVisitor = new CrimsonForthVisitor();
             CFVisitor.Visit(tree);
 
-            Console.WriteLine(CFVisitor.writer.DumpBuffer());
+            Console.WriteLine(CFVisitor.writer.Finalize());
 
             Console.WriteLine("\n----------\n");
 

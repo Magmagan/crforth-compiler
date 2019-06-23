@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using CrimsonForthCompiler.Visitors;
 
 namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
     class CFWriter : LanguageWriter {
 
-        bool moduloWasUsed = false;
+        bool inputWasUsed = false;
+        bool outputWasUsed = false;
         bool divisionWasUsed = false;
+        bool moduloWasUsed = false;
+
         private readonly StringBuilder buffer = new StringBuilder();
 
         public void WritePreProgram() {
@@ -23,7 +27,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteRaw(string assembly) {
-            this.buffer.AppendLine(assembly);
+            this.buffer.AppendLine(assembly.Replace("$", ""));
         }
 
         public void WriteContextRegisterWrite() {
@@ -72,6 +76,11 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteFunctionCall(string functionLabel) {
+            if (functionLabel == "LBL_FN_input")
+                this.inputWasUsed = true;
+            if (functionLabel == "LBL_FN_output")
+                this.outputWasUsed = true;
+
             this.WriteNoOperation("RSP");
             this.buffer.AppendLine("PC>");
             this.WriteImmediate(6);
@@ -203,33 +212,40 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
                     this.buffer.AppendLine("*");
                     break;
                 }
-                // TODO
                 case "/": {
                     this.divisionWasUsed = true;
+                    this.WriteFunctionCall("LBL_FN__divide");
                     break;
                 }
-                // TODO
                 case "%": {
                     this.moduloWasUsed = true;
+                    this.WriteFunctionCall("LBL_FN__modulo");
                     break;
                 }
             }
         }
 
         public string Finalize() {
-            if (this.moduloWasUsed) {
 
+            string assembly = this.buffer.ToString();
+
+            if (!this.moduloWasUsed) {
+                assembly = Regex.Replace(assembly, @"(LBL_FN__modulo:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
             }
 
-            if (this.divisionWasUsed) {
-
+            if (!this.divisionWasUsed) {
+                assembly = Regex.Replace(assembly, @"(LBL_FN__divide:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
             }
 
-            return this.DumpBuffer();
-        }
+            if (!this.inputWasUsed) {
+                assembly = Regex.Replace(assembly, @"(LBL_FN_input:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
+            }
 
-        public string DumpBuffer() {
-            return this.buffer.ToString();
+            if (!this.outputWasUsed) {
+                assembly = Regex.Replace(assembly, @"(LBL_FN_output:(\s|.)*?)(LBL_FN.*)", "$3", RegexOptions.Multiline);
+            }
+
+            return assembly.Trim();
         }
     }
 }
