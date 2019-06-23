@@ -22,6 +22,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
+        #region Struct Rules
+
         // TODO
         public override object VisitStructDeclaration([NotNull] CMinusParser.StructDeclarationContext context) {
             return base.VisitStructDeclaration(context);
@@ -42,12 +44,18 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return base.VisitVariable_StructAccess(context);
         }
 
+        #endregion
+
+        public override object VisitRawAssembly([NotNull] CMinusParser.RawAssemblyContext context) {
+            this.writer.WriteRaw(context.ASSEMBLY().GetText());
+            return null;
+        }
+
         public override object VisitVariableDeclaration_Variable([NotNull] CMinusParser.VariableDeclaration_VariableContext context) {
             this.symbolTable.AddVariable(context.ID().GetText(), 1);
             return null;
         }
 
-        // TODO ?
         public override object VisitVariableDeclaration_Array([NotNull] CMinusParser.VariableDeclaration_ArrayContext context) {
             string arrayName = context.ID().GetText();
             int arraySize = int.Parse(context.NUM().GetText());

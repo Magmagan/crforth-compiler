@@ -20,6 +20,7 @@ declaration
     : variableDeclaration
     | functionDeclaration
     | structDeclaration
+    | rawAssembly
     ;
 
 // ILVisitor
@@ -112,6 +113,7 @@ statement
     | iterationStatement
     | returnStatement
     | variableDeclaration
+    | rawAssembly
     | functionCall ';'
     ;
 
@@ -234,6 +236,10 @@ argumentList
     | argumentList ',' logicalOrExpression
     ;
 
+rawAssembly
+    : ASSEMBLY
+    ;
+
 // ILVisitor
 // CRVisitor
 compileUnit
@@ -244,6 +250,10 @@ compileUnit
 /*
  * Lexer Rules
  */
+
+ASSEMBLY
+    : '$' .*? '$'
+    ;
 
 ID
     : [a-zA-Z_][a-zA-Z0-9_]*

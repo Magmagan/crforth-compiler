@@ -39,5 +39,7 @@ namespace CrimsonForthCompiler.Visitors {
 
         public abstract void WriteRegisterWrite(int register);
 
+        public abstract void WriteRaw(string assembly);
+
     }
 }

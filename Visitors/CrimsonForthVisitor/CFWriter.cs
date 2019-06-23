@@ -22,6 +22,10 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             // 10 4 modulo ( expect 2 on stack )
         }
 
+        public override void WriteRaw(string assembly) {
+            this.buffer.AppendLine(assembly);
+        }
+
         public void WriteContextRegisterWrite() {
             this.WriteRegisterWrite(5);
         }
