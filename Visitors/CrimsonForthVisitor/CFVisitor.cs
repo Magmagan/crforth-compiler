@@ -56,11 +56,12 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
             int arrayPosition = this.symbolTable.GetVariableIndex(arrayName);
 
+            this.writer.WriteVariableAddress($"{arrayName}[0]", arrayPosition + 1);
+
             this.writer.WriteVariableAddress(arrayName, arrayPosition);
             this.writer.WriteContextRegisterRead();
             this.writer.WriteBinaryArithmeticExpression("+");
 
-            this.writer.WriteVariableAddress($"{arrayName}[0]", arrayPosition + 1);
             this.writer.WriteMemoryWrite();
 
             return null;
