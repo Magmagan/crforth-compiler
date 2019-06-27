@@ -58,8 +58,12 @@ namespace CrimsonForthCompiler {
 
         static int Main(string[] args) {
 
-            Console.Write("File path: ");
+            Console.Write("Input path: ");
             string path = Console.ReadLine().Trim('\"');
+
+            Console.Write("Output path: ");
+            string outputPath = Console.ReadLine().Trim('\"');
+
             string input = File.ReadAllText(path);
             string code = PrependCommonFunctions(input);
 
@@ -114,9 +118,13 @@ namespace CrimsonForthCompiler {
             CrimsonForthVisitor CFVisitor = new CrimsonForthVisitor();
             CFVisitor.Visit(tree);
 
-            Console.WriteLine(CFVisitor.writer.Finalize());
+            string assemblyCode = CFVisitor.writer.Finalize();
+
+            Console.WriteLine(assemblyCode);
 
             Console.WriteLine("\n----------\n");
+
+            File.WriteAllText(outputPath, assemblyCode.Replace("\r", ""));
 
             Console.ReadKey();
 
