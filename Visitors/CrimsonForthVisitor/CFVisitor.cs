@@ -407,14 +407,22 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         public void WriteAllContextsExit() {
             int totalContexts = this.symbolTable.contextStack.Count;
+            bool firstContext = true;
 
             foreach (MiniSymbolTable.Context context in this.symbolTable.contextStack) {
+                if (firstContext) {
+                    firstContext = false;
+                    continue;
+                }
+
                 this.writer.WriteContextRegisterRead();
                 this.writer.WriteImmediate(context.size);
                 this.writer.WriteBinaryArithmeticExpression("-");
                 this.writer.WriteContextRegisterWrite();
 
-                if (totalContexts < 2) break;
+                totalContexts--;
+
+                if (totalContexts == 1) break;
             }
         }
 
