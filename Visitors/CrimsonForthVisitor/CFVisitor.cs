@@ -115,6 +115,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         public override object VisitFunctionDeclaration([NotNull] CMinusParser.FunctionDeclarationContext context) {
 
             string functionLabel = this.labelGenerator.GenerateFunctionLabel(context.ID().GetText());
+
             this.writer.WriteLabel(functionLabel);
 
             this.writer.WriteNoOperation("PSP");
@@ -123,37 +124,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             this.Visit(context.parameters());
 
             this.Visit(context.compoundStatement());
-            this.ExitContext();
+
+            this.writer.WriteLabel(this.labelGenerator.FunctionReturnLabel());
+
+            this.ExitAllContexts();
 
             this.writer.WriteFunctionExit();
 
             return null;
-        }
-
-        public void EnterContext() {
-            this.writer.WriteContextRegisterRead();
-            this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
-            this.writer.WriteBinaryArithmeticExpression("+");
-            this.writer.WriteContextRegisterWrite();
-
-            this.symbolTable.EnterContext();
-        }
-
-        public void ExitContext() {
-            if (this.symbolTable.contextStack.Count > 1) {
-                this.symbolTable.ExitContext();
-
-                this.writer.WriteContextRegisterRead();
-                this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
-                this.writer.WriteBinaryArithmeticExpression("-");
-                this.writer.WriteContextRegisterWrite();
-            }
-        }
-
-        public void ExitAllContexts() {
-            while (this.symbolTable.contextStack.Count > 1) {
-                this.ExitContext();
-            }
         }
 
         public override object VisitCompoundStatement([NotNull] CMinusParser.CompoundStatementContext context) {
@@ -242,9 +220,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             if (context.logicalOrExpression() != null)
                 this.Visit(context.logicalOrExpression());
 
-            this.ExitAllContexts();
-
-            this.writer.WriteFunctionExit();
+            this.WriteAllContextsExit();
+            this.writer.WriteUnconditionalJump(this.labelGenerator.FunctionReturnLabel());
 
             return null;
         }
@@ -400,6 +377,45 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             this.writer.WriteFunctionCall(functionLabel);
 
             return null;
+        }
+
+        public void EnterContext() {
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
+            this.writer.WriteBinaryArithmeticExpression("+");
+            this.writer.WriteContextRegisterWrite();
+
+            this.symbolTable.EnterContext();
+        }
+
+        public void ExitContext() {
+            if (this.symbolTable.contextStack.Count > 1) {
+                this.symbolTable.ExitContext();
+
+                this.writer.WriteContextRegisterRead();
+                this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
+                this.writer.WriteBinaryArithmeticExpression("-");
+                this.writer.WriteContextRegisterWrite();
+            }
+        }
+
+        public void ExitAllContexts() {
+            while (this.symbolTable.contextStack.Count > 1) {
+                this.ExitContext();
+            }
+        }
+
+        public void WriteAllContextsExit() {
+            int totalContexts = this.symbolTable.contextStack.Count;
+
+            foreach (MiniSymbolTable.Context context in this.symbolTable.contextStack) {
+                this.writer.WriteContextRegisterRead();
+                this.writer.WriteImmediate(context.size);
+                this.writer.WriteBinaryArithmeticExpression("-");
+                this.writer.WriteContextRegisterWrite();
+
+                if (totalContexts < 2) break;
+            }
         }
 
         private void ThrowCompilerException(string exception) {

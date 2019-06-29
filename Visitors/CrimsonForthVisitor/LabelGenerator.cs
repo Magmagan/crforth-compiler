@@ -9,6 +9,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         private int internalCount;
         private int internalIfCount;
         private int internalWhileCount;
+        private string internalCurrentFunction;
 
         public LabelGenerator() {
             this.internalCount = 0;
@@ -45,7 +46,12 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public string GenerateFunctionLabel(string functionName) {
+            this.internalCurrentFunction = functionName;
             return $"LBL_FN_{functionName}";
+        }
+
+        public string FunctionReturnLabel() {
+            return $"LBL_RETURN_{this.internalCurrentFunction}";
         }
 
     }
