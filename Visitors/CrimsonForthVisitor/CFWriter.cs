@@ -32,11 +32,11 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteRegisterWrite(int register) {
-            this.buffer.AppendLine($"R{Convert.ToString(register, 16)}<");
+            this.buffer.AppendLine($"Gr{Convert.ToString(register, 16)}<");
         }
 
         public override void WriteRegisterRead(int register) {
-            this.buffer.AppendLine($"R{Convert.ToString(register, 16)}>");
+            this.buffer.AppendLine($"Gr{Convert.ToString(register, 16)}>");
         }
 
         public override void WriteMemoryWrite() {
@@ -87,7 +87,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             switch(stackSelector) {
                 case "PSP":
                 case "RSP": {
-                    this.buffer.AppendLine($"NOP {stackSelector}");
+                    this.buffer.AppendLine($"{stackSelector} NOP");
                     break;
                 }
                 default: {
@@ -116,7 +116,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteConditionalJump(string label) {
-            this.buffer.AppendLine($"IF {label}");
+            this.buffer.AppendLine($"{label}");
+            this.buffer.AppendLine("IF");
         }
 
         public override void WriteUnaryArithmeticExpression(string operand) {
@@ -130,7 +131,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
                     break;
                 }
                 case "!": {
-                    this.buffer.AppendLine("=0");
+                    this.buffer.AppendLine("0=");
                     break;
                 }
                 case "&": {
@@ -177,12 +178,12 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
                 }
                 case ">": {
                     this.buffer.AppendLine("<=");
-                    this.buffer.AppendLine("=0");
+                    this.buffer.AppendLine("0=");
                     break;
                 }
                 case ">=": {
                     this.buffer.AppendLine("<");
-                    this.buffer.AppendLine("=0");
+                    this.buffer.AppendLine("0=");
                     break;
                 }
                 case ">>": {
@@ -241,21 +242,31 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         private string RemoveEmptyScopes(string assembly) {
 
             string emptyContextEntry =
-                "R1>\r\n"
+                "Gr1>\r\n"
                 + "0\r\n"
                 + "+\r\n"
-                + "R1<\r\n";
+                + "Gr1<\r\n";
 
             string emptyContextExit =
-                "R1>\r\n"
+                "Gr1>\r\n"
                 + "0\r\n"
                 + "-\r\n"
-                + "R1<\r\n";
+                + "Gr1<\r\n";
 
             assembly = assembly.Replace(emptyContextEntry, "");
             assembly = assembly.Replace(emptyContextExit, "");
 
             return assembly;
+        }
+
+        private string AddHeaderCode(string assembly) {
+            int lineCount = assembly.Split("\r\n").Length;
+            return "PSP NOP\r\n"
+                + (lineCount + 5) + "\r\n"
+                + "Gr1<\r\n"
+                + "LBL_FN_main\r\n"
+                + "JUMP\r\n"
+                + assembly;
         }
 
         public string Finalize() {
@@ -264,6 +275,7 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
             assembly = this.RemoveUnusedFunctions(assembly);
             assembly = this.RemoveEmptyScopes(assembly);
+            assembly = this.AddHeaderCode(assembly);
 
             return assembly.Trim();
         }

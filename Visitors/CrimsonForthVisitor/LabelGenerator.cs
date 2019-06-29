@@ -32,6 +32,10 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return $"LBL_IF_{this.internalIfCount}";
         }
 
+        public string GenerateElseLabel() {
+            return $"LBL_IF_ELSE_{this.internalIfCount}";
+        }
+
         public string GenerateWhileLabel() {
             return $"LBL_WHILE_{this.internalWhileCount}";
         }

@@ -117,6 +117,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             string functionLabel = this.labelGenerator.GenerateFunctionLabel(context.ID().GetText());
             this.writer.WriteLabel(functionLabel);
 
+            this.writer.WriteNoOperation("PSP");
+
             this.EnterContext();
             this.Visit(context.parameters());
 
@@ -188,12 +190,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         public override object VisitSelectionStatement([NotNull] CMinusParser.SelectionStatementContext context) {
 
+            this.labelGenerator.IncrementIfCount();
+
             string endLabel = this.labelGenerator.GenerateIfLabel();
 
             this.Visit(context.logicalOrExpression());
 
             if (context.elseStatement != null) {
-                string elseLabel = this.labelGenerator.GenerateIfLabel();
+                string elseLabel = this.labelGenerator.GenerateElseLabel();
 
                 this.writer.WriteConditionalJump(elseLabel);
                 this.Visit(context.ifStatement);
@@ -209,12 +213,12 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
             this.writer.WriteLabel(endLabel);
 
-            this.labelGenerator.IncrementIfCount();
-
             return null;
         }
 
         public override object VisitIterationStatement([NotNull] CMinusParser.IterationStatementContext context) {
+
+            this.labelGenerator.IncrementWhileCount();
 
             string expressionLabel = this.labelGenerator.GenerateWhileConditionLabel();
             string loopLabel = this.labelGenerator.GenerateWhileLabel();
@@ -226,10 +230,9 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
             this.writer.WriteLabel(expressionLabel);
             this.Visit(context.logicalOrExpression());
+            this.writer.WriteUnaryArithmeticExpression("!");
 
             this.writer.WriteConditionalJump(loopLabel);
-
-            this.labelGenerator.IncrementWhileCount();
 
             return null;
         }
@@ -337,8 +340,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         public override object VisitComparisonExpressionEquals_Equals([NotNull] CMinusParser.ComparisonExpressionEquals_EqualsContext context) {
 
-            this.Visit(context.comparisonExpression());
             this.Visit(context.comparisonExpressionEquals());
+            this.Visit(context.comparisonExpression());
 
             this.writer.WriteBinaryArithmeticExpression(context.children[1].GetText());
 
