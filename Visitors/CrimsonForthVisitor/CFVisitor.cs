@@ -111,6 +111,8 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             this.symbolTable.AddVariable(parameterName, 1);
 
             int parameterIndex = this.symbolTable.GetVariableIndex(parameterName);
+            this.writer.WriteVariableAddress(parameterName, parameterIndex);
+
             this.writer.WriteContextRegisterRead();
             this.writer.WriteBinaryArithmeticExpression("+");
             this.writer.WriteMemoryWrite();
