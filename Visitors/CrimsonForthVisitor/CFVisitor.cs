@@ -13,12 +13,17 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         public readonly CFWriter writer = new CFWriter();
         private readonly LabelGenerator labelGenerator = new LabelGenerator();
         private readonly MiniSymbolTable symbolTable = new MiniSymbolTable();
-        private int inExpression = 0;
+        private bool inGlobalScope = false;
 
         public override object VisitProgram([NotNull] CMinusParser.ProgramContext context) {
-            this.symbolTable.EnterContext();
+            this.inGlobalScope = true;
+            this.writer.EnableGlobalBuffer();
+
             this.Visit(context.declarationList());
-            this.symbolTable.ExitContext();
+
+            this.writer.DisableGlobalBuffer();
+            this.inGlobalScope = false;
+
             return null;
         }
 
@@ -53,6 +58,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         public override object VisitVariableDeclaration_Variable([NotNull] CMinusParser.VariableDeclaration_VariableContext context) {
             this.symbolTable.AddVariable(context.ID().GetText(), 1);
+
+            if (this.inGlobalScope) {
+                this.writer.WriteContextRegisterRead();
+                this.writer.WriteImmediate(1);
+                this.writer.WriteBinaryArithmeticExpression("+");
+                this.writer.WriteContextRegisterWrite();
+            }
+
             return null;
         }
 
@@ -62,15 +75,28 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
             this.symbolTable.AddVariable(arrayName, arraySize + 1);
 
-            int arrayPosition = this.symbolTable.GetVariableIndex(arrayName);
+            int arrayPosition;
+            if (this.inGlobalScope)
+                arrayPosition = 0;
+            else
+                arrayPosition = this.symbolTable.GetVariableIndex(arrayName);
 
             this.writer.WriteVariableAddress($"{arrayName}[0]", arrayPosition + 1);
+            this.writer.WriteContextRegisterRead();
+            this.writer.WriteBinaryArithmeticExpression("+");
 
             this.writer.WriteVariableAddress(arrayName, arrayPosition);
             this.writer.WriteContextRegisterRead();
             this.writer.WriteBinaryArithmeticExpression("+");
 
             this.writer.WriteMemoryWrite();
+
+            if (this.inGlobalScope) {
+                this.writer.WriteContextRegisterRead();
+                this.writer.WriteImmediate(arraySize + 1);
+                this.writer.WriteBinaryArithmeticExpression("+");
+                this.writer.WriteContextRegisterWrite();
+            }
 
             return null;
         }
@@ -114,6 +140,9 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
         public override object VisitFunctionDeclaration([NotNull] CMinusParser.FunctionDeclarationContext context) {
 
+            this.inGlobalScope = false;
+            this.writer.DisableGlobalBuffer();
+
             string functionLabel = this.labelGenerator.GenerateFunctionLabel(context.ID().GetText());
 
             this.writer.WriteLabel(functionLabel);
@@ -125,11 +154,14 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
 
             this.Visit(context.compoundStatement());
 
+            this.ExitContext();
+
             this.writer.WriteLabel(this.labelGenerator.FunctionReturnLabel());
 
-            this.ExitAllContexts();
-
             this.writer.WriteFunctionExit();
+
+            this.writer.EnableGlobalBuffer();
+            this.inGlobalScope = true;
 
             return null;
         }
@@ -248,7 +280,12 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             int variableIndex = this.symbolTable.GetVariableIndex(variableName);
 
             this.writer.WriteVariableAddress(variableName, variableIndex);
-            this.writer.WriteContextRegisterRead();
+
+            if (this.symbolTable.GetVariableScope(variableName) == 0)
+                this.writer.WriteProgramSize();
+            else
+                this.writer.WriteContextRegisterRead();
+
             this.writer.WriteBinaryArithmeticExpression("+");
 
             return null;
@@ -283,21 +320,9 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             return null;
         }
 
-        public override object VisitLogicalOrExpression_NoOr([NotNull] CMinusParser.LogicalOrExpression_NoOrContext context) {
-            this.inExpression++;
-            base.VisitLogicalOrExpression_NoOr(context);
-            this.inExpression--;
-
-            return null;
-        }
-
         // TODO
         public override object VisitLogicalOrExpression_Or([NotNull] CMinusParser.LogicalOrExpression_OrContext context) {
-            this.inExpression++;
-            base.VisitLogicalOrExpression_Or(context);
-            this.inExpression--;
-
-            return null;
+            return base.VisitLogicalOrExpression_Or(context);
         }
 
         // TODO
@@ -374,39 +399,49 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             string functionName = context.ID().GetText();
             string functionLabel = this.labelGenerator.GenerateFunctionLabel(functionName);
 
+            this.EnterContext();
             this.writer.WriteFunctionCall(functionLabel);
+            this.ExitContext();
 
             return null;
         }
 
+        #region MyRegion
+
         public void EnterContext() {
-            this.writer.WriteContextRegisterRead();
-            this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
-            this.writer.WriteBinaryArithmeticExpression("+");
-            this.writer.WriteContextRegisterWrite();
+            if (this.symbolTable.contextStack.Count > 0) {
+                this.writer.WriteContextRegisterRead();
+                this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
+                this.writer.WriteBinaryArithmeticExpression("+");
+                this.writer.WriteContextRegisterWrite();
+            }
 
             this.symbolTable.EnterContext();
         }
 
         public void ExitContext() {
-            if (this.symbolTable.contextStack.Count > 1) {
+            if (this.symbolTable.contextStack.Count > 0) {
                 this.symbolTable.ExitContext();
 
-                this.writer.WriteContextRegisterRead();
-                this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
-                this.writer.WriteBinaryArithmeticExpression("-");
-                this.writer.WriteContextRegisterWrite();
+                if (this.symbolTable.contextStack.Count > 0) {
+                    this.writer.WriteContextRegisterRead();
+                    this.writer.WriteImmediate(this.symbolTable.contextStack.Peek().size);
+                    this.writer.WriteBinaryArithmeticExpression("-");
+                    this.writer.WriteContextRegisterWrite();
+                }
+            }
+            else {
+                throw new CompilerException("Attempted to exit context, but no contexts in stack.");
             }
         }
 
         public void ExitAllContexts() {
-            while (this.symbolTable.contextStack.Count > 1) {
+            while (this.symbolTable.contextStack.Count > 0) {
                 this.ExitContext();
             }
         }
 
         public void WriteAllContextsExit() {
-            int totalContexts = this.symbolTable.contextStack.Count;
             bool firstContext = true;
 
             foreach (MiniSymbolTable.Context context in this.symbolTable.contextStack) {
@@ -419,12 +454,10 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
                 this.writer.WriteImmediate(context.size);
                 this.writer.WriteBinaryArithmeticExpression("-");
                 this.writer.WriteContextRegisterWrite();
-
-                totalContexts--;
-
-                if (totalContexts == 1) break;
             }
         }
+
+        #endregion
 
         private void ThrowCompilerException(string exception) {
             throw new CompilerException(exception);
@@ -449,12 +482,19 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
                 public int size;
             }
 
+            public readonly Context globalContext = new Context {
+                size = 0,
+                symbols = new Dictionary<string, SymbolEntry>(),
+            };
             public readonly Stack<Context> contextStack = new Stack<Context>();
             private int totalSize = 0;
 
             public void EnterContext() {
 
-                if (this.contextStack.Count > 0) {
+                if (this.contextStack.Count == 0) {
+                    this.totalSize += this.globalContext.size;
+                }
+                else {
                     this.totalSize += this.contextStack.Peek().size;
                 }
 
@@ -469,15 +509,42 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
             public void AddVariable(string variableName, int size) {
                 SymbolEntry symbol;
                 symbol.SymbolName = variableName;
-                symbol.SymbolIndex = this.contextStack.Peek().size;
                 symbol.SymbolSize = size;
 
-                this.contextStack.Peek().size += size;
+                if (this.contextStack.Count > 0) {
+                    symbol.SymbolIndex = this.contextStack.Peek().size;
 
-                this.contextStack.Peek().symbols.Add(variableName, symbol);
+                    this.contextStack.Peek().size += size;
+                    this.contextStack.Peek().symbols.Add(variableName, symbol);
+                }
+                else {
+                    symbol.SymbolIndex = this.globalContext.size;
+
+                    this.globalContext.size += size;
+                    this.globalContext.symbols.Add(variableName, symbol);
+                }
+            }
+
+            public int GetVariableScope(string variableName) {
+
+                if (this.globalContext.symbols.ContainsKey(variableName))
+                    return 0;
+
+                int currentScope = this.contextStack.Count;
+                foreach (Context ctx in this.contextStack) {
+                    if (ctx.symbols.ContainsKey(variableName))
+                        return currentScope;
+                    else
+                        currentScope--;
+                }
+
+                return -1;
             }
 
             public int GetVariableIndex(string variableName) {
+
+                if (this.globalContext.symbols.ContainsKey(variableName))
+                    return globalContext.symbols[variableName].SymbolIndex;
 
                 int totalSizeDiff = 0;
                 bool skippedCurrentContext = false;

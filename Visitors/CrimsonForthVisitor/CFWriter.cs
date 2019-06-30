@@ -12,15 +12,21 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         bool divisionWasUsed = false;
         bool moduloWasUsed = false;
 
-        private readonly StringBuilder buffer = new StringBuilder();
+        bool inGlobalBuffer = false;
 
-        public void WritePreProgram() {
-            // PUSH PROGRAM_SIZE
-            // R0<
-        }
+        private readonly StringBuilder buffer = new StringBuilder();
+        private readonly StringBuilder globalBuffer = new StringBuilder();
 
         public override void WriteRaw(string assembly) {
-            this.buffer.AppendLine(assembly.Replace("$", ""));
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine(assembly.Replace("$", ""));
+        }
+
+        public void WriteProgramSize() {
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine("PROGRAM_SIZE");
         }
 
         public void WriteContextRegisterWrite() {
@@ -32,34 +38,48 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteRegisterWrite(int register) {
-            this.buffer.AppendLine($"Gr{Convert.ToString(register, 16)}<");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine($"Gr{Convert.ToString(register, 16)}<");
         }
 
         public override void WriteRegisterRead(int register) {
-            this.buffer.AppendLine($"Gr{Convert.ToString(register, 16)}>");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine($"Gr{Convert.ToString(register, 16)}>");
         }
 
         public override void WriteMemoryWrite() {
-            this.buffer.AppendLine("!");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine("!");
         }
 
         public override void WriteVariableAddress(string name, int address) {
-            this.buffer.Append($"VAR_{name}: ");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.Append($"VAR_{name}: ");
             this.WriteImmediate(address);
         }
 
         public override void WriteMemoryAccess(int address) {
-            this.buffer.Append("VAR: ");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.Append("VAR: ");
             this.WriteImmediate(address);
-            this.buffer.AppendLine("@");
+            buffer.AppendLine("@");
         }
 
         public override void WriteMemoryAccess() {
-            this.buffer.AppendLine("@");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine("@");
         }
 
-        public override void WriteImmediate(int number) {    
-            this.buffer.AppendLine($"{Math.Abs(number)}");
+        public override void WriteImmediate(int number) {
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine($"{Math.Abs(number)}");
             if (number < 0)
                 this.WriteUnaryArithmeticExpression("-");
         }
@@ -69,13 +89,15 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteFunctionCall(string functionLabel) {
+            StringBuilder buffer = this.CurrentBuffer();
+
             if (functionLabel == "LBL_FN_input")
                 this.inputWasUsed = true;
             if (functionLabel == "LBL_FN_output")
                 this.outputWasUsed = true;
 
             this.WriteNoOperation("RSP");
-            this.buffer.AppendLine("PC>");
+            buffer.AppendLine("PC>");
             this.WriteImmediate(6);
             this.WriteBinaryArithmeticExpression("+");
             this.WriteNoOperation("PSP");
@@ -84,14 +106,16 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteNoOperation(string stackSelector) {
-            switch(stackSelector) {
+            StringBuilder buffer = this.CurrentBuffer();
+
+            switch (stackSelector) {
                 case "PSP":
                 case "RSP": {
-                    this.buffer.AppendLine($"{stackSelector} NOP");
+                    buffer.AppendLine($"{stackSelector} NOP");
                     break;
                 }
                 default: {
-                    this.buffer.AppendLine("NOP");
+                    buffer.AppendLine("NOP");
                     break;
                 }
             }
@@ -103,42 +127,52 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteLabel(string label) {
-            this.buffer.Append($"{label}: ");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.Append($"{label}: ");
         }
 
         public override void WriteUnconditionalJump() {
-            this.buffer.AppendLine("JUMP");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine("JUMP");
         }
 
         public override void WriteUnconditionalJump(string label) {
-            this.buffer.AppendLine(label);
-            this.buffer.AppendLine("JUMP");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine(label);
+            buffer.AppendLine("JUMP");
         }
 
         public override void WriteConditionalJump(string label) {
-            this.buffer.AppendLine($"{label}");
-            this.buffer.AppendLine("IF");
+            StringBuilder buffer = this.CurrentBuffer();
+
+            buffer.AppendLine($"{label}");
+            buffer.AppendLine("IF");
         }
 
         public override void WriteUnaryArithmeticExpression(string operand) {
+            StringBuilder buffer = this.CurrentBuffer();
+
             switch (operand) {
                 case "-": {
-                    this.buffer.AppendLine("NEGATE");
+                    buffer.AppendLine("NEGATE");
                     break;
                 }
                 case "~": {
-                    this.buffer.AppendLine("INVERT");
+                    buffer.AppendLine("INVERT");
                     break;
                 }
                 case "!": {
-                    this.buffer.AppendLine("0=");
+                    buffer.AppendLine("0=");
                     break;
                 }
                 case "&": {
-                    string bufferText = this.buffer.ToString();
+                    string bufferText = buffer.ToString();
                     string[] bufferLines = bufferText.Split("\r\n");
                     if (bufferLines[bufferLines.Length - 2] == "@")
-                        this.buffer.Remove(this.buffer.Length - "@\r\n".Length, "@\r\n".Length);
+                        buffer.Remove(buffer.Length - "@\r\n".Length, "@\r\n".Length);
                     else
                         Console.WriteLine("EEEERRR");
                     break;
@@ -147,63 +181,65 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         }
 
         public override void WriteBinaryArithmeticExpression(string operand) {
+            StringBuilder buffer = this.CurrentBuffer();
+
             switch (operand) {
                 case "&": {
-                    this.buffer.AppendLine("AND");
+                    buffer.AppendLine("AND");
                     break;
                 }
                 case "^": {
-                    this.buffer.AppendLine("XOR");
+                    buffer.AppendLine("XOR");
                     break;
                 }
                 case "|": {
-                    this.buffer.AppendLine("OR");
+                    buffer.AppendLine("OR");
                     break;
                 }
                 case "==": {
-                    this.buffer.AppendLine("=");
+                    buffer.AppendLine("=");
                     break;
                 }
                 case "!=": {
-                    this.buffer.AppendLine("<>");
+                    buffer.AppendLine("<>");
                     break;
                 }
                 case "<=": {
-                    this.buffer.AppendLine("<=");
+                    buffer.AppendLine("<=");
                     break;
                 }
                 case "<": {
-                    this.buffer.AppendLine("<");
+                    buffer.AppendLine("<");
                     break;
                 }
                 case ">": {
-                    this.buffer.AppendLine("<=");
-                    this.buffer.AppendLine("0=");
+                    buffer.AppendLine("<=");
+                    buffer.AppendLine("0=");
                     break;
                 }
                 case ">=": {
-                    this.buffer.AppendLine("<");
-                    this.buffer.AppendLine("0=");
+                    buffer.AppendLine("<");
+                    buffer.AppendLine("0=");
                     break;
                 }
                 case ">>": {
-                    this.buffer.AppendLine("RSHIFT");
+                    buffer.AppendLine("RSHIFT");
                     break;
                 }
                 case "<<": {
-                    this.buffer.AppendLine("LSHIFT");
+                    buffer.AppendLine("LSHIFT");
                     break;
                 }
                 case "+": {
-                    this.buffer.AppendLine("+");
+                    buffer.AppendLine("+");
                     break;
                 }
                 case "-": {
-                    this.buffer.AppendLine("-");
+                    buffer.AppendLine("-");
                     break;
                 }
                 case "*": {
-                    this.buffer.AppendLine("*");
+                    buffer.AppendLine("*");
                     break;
                 }
                 case "/": {
@@ -217,6 +253,18 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
                     break;
                 }
             }
+        }
+
+        private StringBuilder CurrentBuffer() {
+            return this.inGlobalBuffer ? this.globalBuffer : this.buffer;
+        }
+
+        public void EnableGlobalBuffer() {
+            this.inGlobalBuffer = true;
+        }
+
+        public void DisableGlobalBuffer() {
+            this.inGlobalBuffer = false;
         }
 
         private string RemoveUnusedFunctions(string assembly) {
@@ -262,8 +310,9 @@ namespace CrimsonForthCompiler.Visitors.CrimsonForthVisitor {
         private string AddHeaderCode(string assembly) {
             int lineCount = assembly.Split("\r\n").Length;
             return "PSP NOP\r\n"
-                + (lineCount + 5) + "\r\n"
+                + "PROGRAM_SIZE\r\n"
                 + "Gr1<\r\n"
+                + this.globalBuffer.ToString()
                 + "LBL_FN_main\r\n"
                 + "JUMP\r\n"
                 + assembly;
